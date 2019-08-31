@@ -13,17 +13,43 @@ Goals and summary
 
 The goal of the JSFOL draft is proposing a simple JSON syntax for writing
 first order logic [FOL](https://en.wikipedia.org/wiki/First-order_logic "FOL") 
-formulas in a machine-processable manner. A quick example containing some
-facts, rules and a conjecture to be proved from those:
+formulas in a machine-processable manner. 
+
+A simple example stating some facts and rules:
+
+    ["and",
+      ["brother","John","Mike"],
+      ["brother","John","Pete"],
+      [["brother","?X","?Y"], "=>", ["brother","?Y","?X"]],
+      [[["brother","?X","?Y"], "and",  ["brother","?Y","?Z"]] "=>", ["brother","?X","?Z"]]
+    ]
+
+Another example with some metainformation added, indicating also a conjecture to be proved:
+
 
     {"name": "grandfather example",
-     "role": "query",      
-     "content": ["and",
+      "role": "query",      
+      "content": ["and",
       ["father","John","Mark"],
       ["mother","Eve","Mark"],
       ["father","Donald","Eve"],
       ["if" ["father","?X","?Y"], ["father","?Y","?Z"], "then", ["grandfather","?X","?Z"]],
       ["if" ["father","?X","?Y"], ["mother","?Y","?Z"], "then", ["grandfather","?X","?Z"]],
+      {"role": "conjecture",
+        "content": ["exists",["X"],["grandfather","X","Mark"]] 
+      }]
+    }
+
+The third example encodes the last problem using equality and explicit quantifiers:
+
+    {"name": "grandfather example",
+     "role": "query",      
+     "content": ["and",
+      [["father","Mark"], "=", "John"],
+      [["mother","Mark"], "=", "Eve"],
+      [["father","Eve"], "=", "Donald"],
+      ["forall",["gchild"], ["grandfather", ["father",["father","gchild"]], "gchild"]],
+      ["forall",["gchild"], ["grandfather", ["father",["mother","gchild"]], "gchild"]],
       {"role": "conjecture",
        "content": ["exists",["X"],["grandfather","X","Mark"]] 
       }]
