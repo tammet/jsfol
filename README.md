@@ -181,7 +181,7 @@ to applications.
 
 For example, neither classical FOL nor the CNF and FOF fragments of TPTP allow variables
 as a leading element of a term, i.e. in a function / predicate symbol position. However,
-JSFOL itself does prohibit such usage.
+JSFOL itself does not prohibit such usage.
 
 
 
@@ -240,7 +240,13 @@ The following constructors are predefined:
 
 * `"not"` takes a single argument. Note that we have said before:
     * `["-p",1]` stands for `["not",["p",1]]`,
-    * Both `"!="` and `"-="` are used for constructing negated equality,
+    * Both `"!="` and `"-="` are used for constructing negated equality. For example,
+       
+       `["a","!=","b"],  ["a","-=","b"], ["!=", "a", "b"], ["-=", "a", "b"]`
+       
+       are all equivalent to
+
+       `["not",["=","a","b"]`
 
 
 * `"and"` and `"or"` in a prefix position take N arguments, including no arguments 
@@ -264,28 +270,30 @@ The following constructors are predefined:
 
 * There is an additional mixfix operator `if..then` not present in TPTP. Example:
 
-`["if", "a", "b", "c", "then", "d", "e"]`
+    `["if", "a", "b", "c", "then", "d", "e"]`
 
-is translated as 
+    is translated as 
 
-`[["and","a","b","c"], "=>", ["or","d","e"]]`
+    `[["and","a","b","c"], "=>", ["or","d","e"]]`
 
 * The untyped quantifiers `"exists"` and `"forall"` 
   are reprented as a list of three elements: quantifier, list of variables, formula.
   Examples:
 
   `["exists",["X"],["p","X"]]`
+
   `["forall",["X","Y2"],["p","Y2","X"]]`
   
 * The *typed* quantifiers are represented similarly, with a two-element list standing
   for a typed variable. Examples:
   
   `["exists",[["X","int"]],["p","X"]]`
+
   `["forall",[["X","int"],["Y2","string"]],["p","Y2","X"]]`
   
   where we could use any type names instead of "int" and "string". 
   
-  The predefined type names are: `"boolean", "int", "float", "string", "datetime"`
+  The predefined type names are: `"bool", "int", "float", "string", "datetime"`
 
 
    
@@ -295,12 +303,12 @@ Metainformation and file import
 Any kind of metainformation (formula/term names, confidence measures, context indicators, comments etc) 
 is represented using JSON objects and can be attached to formulas, parts of formulas and terms. Example:
 
-{"name":"example formula",
- "confidence": 0.8,
- "context": "examples",
- "include": ["/opt/axioms/a1.ax","http://example.org/ax2"],
- "role", "axiom",
- "content": ["p",1,"a"] }
+    {"name":"example formula",
+    "confidence": 0.8,
+    "context": "examples",
+    "include": ["/opt/axioms/a1.ax","http://example.org/ax2"],
+    "role", "axiom",
+    "content": ["p",1,"a"] }
  
  
 where the predefined keys are:
