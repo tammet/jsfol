@@ -328,28 +328,28 @@ formula represents a full query to be answered, in other words, a theorem intend
  disproved. In TPTP single problem files stand for the `"query"` role.
 
 We note that `"conjecture"` role value in TPTP forces the content to be negated when asking for unsatisfiability
-of a conjunction. Example:
+of a conjunction. We bring two equivalent example formulas, where in the first case "conjecture" is used with the positive "a" and in the second "negated_conjecture" with the negative "-a":
 
     ["and", 
       "a",
       "b",
       {"role": "conjecture", "content": "a"}]
 
-represents a provable propositional formula `(a & b) => a`
+represents a provable propositional formula `(a & b) => a`, the negation of which
+is equivalent to an unsatisfiable `(a & b) & -a`
 
 whereas 
 
     ["and", 
       "a",
       "b",
-      {"role": "negated_conjecture", "content": "a"}]
+      {"role": "negated_conjecture", "content": "-a"}]
 
-
-represents an unsatisfiable propositional formula `(a & b) & -a`
+also represents an unsatisfiable propositional formula `(a & b) & -a`
 
 For other *role* values we cite "The Formulae Section" of 
 [TPTP technical manual](http://tptp.org/TPTP/TR/TPTPTR.shtml "TPTP technical manual"): 
-"The role gives the user semantics of the formula, one of `axiom, hypothesis, definition, assumption, lemma, theorem, corollary, conjecture, negated_conjecture, plain, type`, and `unknown`. The axiom-like formulae are those with the roles axiom, hypothesis, definition, assumption, lemma, theorem, and corollary. They are accepted, without proof, as a basis for proving conjectures in THF, TFF, and FOF problems. In CNF problems the axiom-like formulae are accepted as part of the set whose satisfiability has to be established. There is no guarantee that the axiom-like formulae of a problem are consistent. hypothesis are assumed to be true for a particular problem. definitions are used to define symbols. assumptions must be discharged before a derivation is complete. lemmas and theorems have been proven from the other axiom-like formulae, and are thus redundant wrt those axiom-like formulae. theorem is used also as the role of proven conjectures, in output. A problem containing a lemma or theorem that is not redundant wrt the other axiom-like formulae is ill-formed. theorems are more important than lemmas from the user perspective. corollarys have been proven from the axioms and a theorem, and are thus redundant wrt the other axiom-like and theorem formulae. A problem containing a corollary that is not redundant wrt the other axiom-like formulae and theorem formulae is ill-formed. conjectures occur in only THF, TFF, and FOF problems, and are to all be proven from the axiom(-like) formulae. A problem is solved only when all conjectures are proven.
+"The role gives the user semantics of the formula, one of `axiom, hypothesis, definition, assumption, lemma, theorem, corollary, conjecture, negated_conjecture, plain, type`, and `unknown`. The axiom-like formulae are those with the roles axiom, hypothesis, definition, assumption, lemma, theorem, and corollary. They are accepted, without proof, as a basis for proving conjectures in THF, TFF, and FOF problems. In CNF problems the axiom-like formulae are accepted as part of the set whose satisfiability has to be established. There is no guarantee that the axiom-like formulae of a problem are consistent. hypothesis are assumed to be true for a particular problem. definitions are used to define symbols. assumptions must be discharged before a derivation is complete. lemmas and theorems have been proven from the other axiom-like formulae, and are thus redundant wrt those axiom-like formulae. theorem is used also as the role of proven conjectures, in output. A problem containing a lemma or theorem that is not redundant wrt the other axiom-like formulae is ill-formed. theorems are more important than lemmas from the user perspective. corollarys have been proven from the axioms and a theorem, and are thus redundant wrt the other axiom-like and theorem formulae. A problem containing a corollary that is not redundant wrt the other axiom-like formulae and theorem formulae is ill-formed. conjectures occur in only THF, TFF, and FOF problems, and are to all be proven from the axiom(-like) formulae. A problem is solved only when all conjectures are proven."
 
 
 Treating of any other key values except "include", "content" and "role", is up to the application.
