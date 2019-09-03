@@ -21,8 +21,8 @@ Changes in 0.3
 * Strings thrown out.
 * Predefined functions/predicates/connectives in JSFOL follow TPTP exactly.
 * "formulas" list introduced for independent self-contained formulas, like clauses.
-* JSFOL+ introduces type-independent predefined arithmetic functions/predicates and
-  several convenience logical connectives like -, and, or, if ... then ...
+* JSFOL+ introduces convenience arithmetic functions/predicates like +, - and
+  convenience logical connectives like -, and, or, if ... then ...
 * JSFOL+ introduces SQL-inspired handling of JSON `null`
 
 
