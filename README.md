@@ -9,7 +9,7 @@ tanel.tammet@gmail.com
 
 with contributions from schulz@eprover.org and geoff@cs.miami.edu
 
-Changes in 0.4.1
+Changes in 0.4.2
 ----------------
 
 * ? prefix for vars removed
@@ -229,7 +229,7 @@ Primitives
       they are one of the predefined strings like `"&", "$sum", "$real"` etc.
       Examples:
 
-      `"p", "foo", "bar 23", "_here", "++something", "1 to 3`
+      `"p", "foo", "bar 23", "_here", "++something", "1 to 3"`
 
   
    
