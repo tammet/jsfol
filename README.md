@@ -9,8 +9,8 @@ tanel.tammet@gmail.com
 
 with contributions from schulz@eprover.org and geoff@cs.miami.edu
 
-Changes in 0.4
---------------
+Changes in 0.4.1
+----------------
 
 * ? prefix for vars removed
 * Capitalization of variables required, non-capitalized alphabetic are constants/funs/preds.
