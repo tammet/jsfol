@@ -223,7 +223,7 @@ Primitives
       Note: multiple "~" like "~~p" do create a nested negation.
       
 
-    * Strings without any of the previously described prefixes `d:, `r:`, `~` and 
+    * Strings without any of the previously described prefixes `d:`, `r:`, `~` and 
       *starting with a lower case or a non-alphabetic letter* 
       in a term stand for ordinary predicate or function symbols, unless
       they are one of the predefined strings like `"&", "$sum", "$real"` etc.
@@ -550,7 +550,7 @@ definitions and operators described below.
 
 ### Configurable differentiation between variables and constants 
 
-The JSFOL requirement that variables start with an upper case letter and
+The JSFOL requirement that all variables start with an upper case letter and
 constants not, is dropped: any string bound by a quantifier is considered
 to be a variable, including strings starting with lower case letters.
 
@@ -566,6 +566,9 @@ keys:
   distinct symbols.
 *  `"rational_prefix"` : similarly redefines thedefault `r:` prefix for
    rationals.
+
+In case a `"variable_prefix"` is not defined, the JSFOL upper case first character
+convention still holds for distinguishing free variables and constants.
 
 In the following example `"x"` is a quantified variable, `"?something"` 
 is a free variable, `"##an_object"`is a distinct constant and
