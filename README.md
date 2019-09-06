@@ -2,7 +2,7 @@
 JSFOL: JSON representation of first-order logic formulas
 ============================================================
 
-*Draft version 0.4.2: looking for discussion and feedback*
+*Draft version 0.4.3: looking for discussion and feedback*
 
 
 tanel.tammet@gmail.com
@@ -283,7 +283,7 @@ only in the middle of a three-element list (infix form), like
 The `$distinct` is a special unlimited-length-list prefix predicate for specifying
 that many terms are  unequal to each other. Example:
 
-  `["$distinct","John","Mike","Pete","Andrew"]` 
+  `["$distinct","john","mike","pete","andrew"]` 
 
 The full list of arithmetic predicates and functions:
     
@@ -371,10 +371,10 @@ A set of formulas can be represented as a list with a first element being `"form
 like this:
  
     ["formulas",
-      ["brother","John","Mike"],
-      ["brother","John","Pete"],
+      ["brother","john","mike"],
+      ["brother","john","pete"],
       [["brother","X","Y"], "=>", ["brother","Y","X"]],
-      [["is_father","X"], "<=>", [["exists"],["Y"],["father,"X","Y"]]]      
+      [["is_father","X"], "<=>", ["exists",["Y"],["father,"X","Y"]]]      
     ]
 
 The elements of the formula list (except the leading `"formulas"`) are translated as a conjunction
@@ -386,10 +386,10 @@ a "forall" quantifier at the top level of this formula.
 The previous example is thus translated as:
 
     [
-      ["brother","John","Mike"], "&", 
-      ["brother","John","Pete"], "&",
+      ["brother","john","mike"], "&", 
+      ["brother","john","pete"], "&",
       ["forall",["X","Y"], [["brother","X","Y"], "=>", ["brother","Y","X"]]], "&",
-      ["forall",["X"], [["is_father","X"], "<=>", [["exists"],["Y"],["father,"X","Y"]]]]      
+      ["forall",["X"], [["is_father","X"], "<=>", ["exists",["Y"],["father,"X","Y"]]]]      
     ]
  
 Notice that 
@@ -460,16 +460,16 @@ of a conjunction. We bring two equivalent example formulas, where in the first c
       {"role": "conjecture", "content": "a"}]
 
 represents a provable propositional formula `(a & b) => a`, the negation of which
-is equivalent to an unsatisfiable `(a & b) & -a`
+is equivalent to an unsatisfiable `(a & b) & ~a`
 
 whereas 
 
     ["formulas", 
       "a",
       "b",
-      {"role": "negated_conjecture", "content": "-a"}]
+      {"role": "negated_conjecture", "content": "~a"}]
 
-also represents an unsatisfiable propositional formula `(a & b) & -a`
+also represents an unsatisfiable propositional formula `(a & b) & ~a`
 
 For other *role* values we cite "The Formulae Section" of 
 [TPTP technical manual](http://tptp.org/TPTP/TR/TPTPTR.shtml "TPTP technical manual"): 
@@ -514,28 +514,28 @@ Example:
 
     {"name": "streaming example"}
 
-    ["forall",[["X","int"],["Y2","string"]],["p","Y2","X"]]
+    ["forall",[["X","$int"],"Y2"],["p","Y2","X"]]
     {"name":"example formula",
     "confidence": 0.8,
     "context": "examples",
     "include": ["/opt/axioms/a1.ax","http://example.org/ax2"],
     "content": ["p",1,"a"] }
 
-    ["exists",[["X","int"]],["p","X"]]
+    ["exists",[["X","$int"],"Y"],["p","X","Y"]]
 
 should be preferrably treated as
 
     {"name": "streaming example",
      "content":, ["formulas",
 
-    ["forall",[["X","int"],["Y2","string"]],["p","Y2","X"]],
-    {"name":"example formula",
-    "confidence": 0.8,
-    "context": "examples",
-    "include": ["/opt/axioms/a1.ax","http://example.org/ax2"],
-    "content": ["p",1,"a"] },
+      ["forall",[["X","$int"],"Y2"],["p","Y2","X"]],
+      {"name":"example formula",
+      "confidence": 0.8,
+      "context": "examples",
+      "include": ["/opt/axioms/a1.ax","http://example.org/ax2"],
+      "content": ["p",1,"a"] },
 
-    ["exists",[["X","int"]],["p","X"]]
+      ["exists",[["X","$int"],"Y"],["p","X","Y"]]
 
     ]
     }
@@ -658,11 +658,11 @@ where this particular occurrence of `null` is replaced by the variable `V'.
 
 Example:
 
-   `["father","John",null]` 
+   `["father","john",null]` 
 
 is translated as 
 
-   `["exists", ["X"], ["father","John","X"]]`. 
+   `["exists", ["X"], ["father","john","X"]]`. 
 
 Example:
 
