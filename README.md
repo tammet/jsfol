@@ -216,9 +216,9 @@ Primitives
     * Strings prefixed by `"~"` and located in the first position of a list in a
       formula context are assumed to construct a negated atom led by a symbol
       constructed from the rest of the string. 
-      For example, the arguments of the following "and" are equivalent:
+      For example, the arguments of the following "&" are equivalent:
 
-      `["and" ["~p", 1], ["not", ["p",1]]`
+      `[["~p", 1], "&", ["~", ["p",1]]`
       
       Note: multiple "~" like "~~p" do create a nested negation.
       
@@ -385,10 +385,10 @@ upper case letter) is translated by binding the free variables in this formula b
 a "forall" quantifier at the top level of this formula.
 The previous example is thus translated as:
 
-    ["and",
-      ["brother","John","Mike"],
-      ["brother","John","Pete"],
-      ["forall",["X","Y"], [["brother","X","Y"], "=>", ["brother","Y","X"]]],
+    [
+      ["brother","John","Mike"], "&", 
+      ["brother","John","Pete"], "&",
+      ["forall",["X","Y"], [["brother","X","Y"], "=>", ["brother","Y","X"]]], "&",
       ["forall",["X"], [["is_father","X"], "<=>", [["exists"],["Y"],["father,"X","Y"]]]]      
     ]
  
@@ -454,7 +454,7 @@ disproved. In TPTP single problem files stand for the `"query"` role.
 We note that `"conjecture"` role value in TPTP forces the content to be negated when asking for unsatisfiability
 of a conjunction. We bring two equivalent example formulas, where in the first case "conjecture" is used with the positive "a" and in the second "negated_conjecture" with the negative "-a":
 
-    ["and", 
+    ["formulas", 
       "a",
       "b",
       {"role": "conjecture", "content": "a"}]
@@ -464,7 +464,7 @@ is equivalent to an unsatisfiable `(a & b) & -a`
 
 whereas 
 
-    ["and", 
+    ["formulas", 
       "a",
       "b",
       {"role": "negated_conjecture", "content": "-a"}]
