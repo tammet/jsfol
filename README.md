@@ -2,15 +2,15 @@
 JSFOL: JSON representation of first-order logic formulas
 ============================================================
 
-*Draft version 0.4: looking for discussion and feedback*
+*Draft version 0.4.2: looking for discussion and feedback*
 
 
 tanel.tammet@gmail.com
 
 with contributions from schulz@eprover.org and geoff@cs.miami.edu
 
-Changes in 0.4.2
-----------------
+Changes in 0.4
+--------------
 
 * ? prefix for vars removed
 * Capitalization of variables required, non-capitalized alphabetic are constants/funs/preds.
