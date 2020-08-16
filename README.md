@@ -25,14 +25,13 @@ The main goals of JSON-LD-LOGIC are:
 * Compatibility with [JSON-LD](https://json-ld.org/), 
   see the [latest W3C draft](https://w3c.github.io/json-ld-syntax/). 
 
-An implementation of JSON-LD-LOGIC is available: the [gkc](https://github.com/tammet/gkc/)
-reasoner and toolkit. Gkc is able to both answer the questions and present proofs,
+The conversion and proof examples in this document have been made using 
+the [gkc](https://github.com/tammet/gkc/)
+reasoner and toolkit implementing both JSON-LD-LOGIC and TPTP languages.
+Gkc is able to answer the questions and present proofs,
 clausify JSON-LD-LOGIC expressions and convert them to or from the TPTP language. 
-Check out a [web playground][gkc](http://logictools.org/json.html) for JSON-LD-LOGIC: 
-it runs gkc in the browser using WASM.
-
-The conversion and proof examples in this document are made using 
-[gkc](https://github.com/tammet/gkc/).
+Check out a [web playground](http://logictools.org/json.html) for JSON-LD-LOGIC, 
+running gkc in the browser using WASM. 
 
 A simple unsatisfiable example using core JSON-LD-LOGIC stating some facts, rules and a question:
 
@@ -80,34 +79,30 @@ convenience operators like if ... then ..., indicating a question to be answered
 The main features of the syntax are:
 
 * Terms and atoms are represented as JSON lists with predicate/function symbols 
-  in the first position (prefix form) like ["brother","john","pete"],
-* JSON-LD semantics in RDF is represented by a special $arc predicate for triplets
-  like ["$arc","pete","father","john"] and an
-  $narc predicate for named triplets aka quads, like ["$narc","pete","father","john","eveknows"].
-* JSON strings can represent ordinary constant/function/predicate symbols like "foo",
-  free variables like "?:X", blank nodes like "_:b0" and distinct symbols like "#:bar",  
+  in the first position (prefix form) like `["brother","john","pete"]`,
+* JSON-LD semantics in RDF is represented by the`"$arc"` predicate for triplets
+  like `["$arc","pete","father","john"]` and an
+  `"$narc"` predicate for named triplets aka quads, like ["$narc","pete","father","john","eveknows"].
+* JSON strings can represent ordinary constant/function/predicate symbols like `"foo"`,
+  free variables like `"?:X"`, blank nodes like `"_:b0"` and distinct symbols like `"#:bar"`,  
   using a special JSON-LD-style *prefix*. 
-* Numeric arithmetic, string operations on distinct symbols and a list type are provided.  
-* JSON lists in JSON-LD like {"@list":["a",4]} are translated to nested typed terms
-  using the "$list" and "$nil" functions, like ["$list","a",["$list",4,$nil]].
+* Numeric arithmetic, string operations on distinct symbols and a list type are defined.  
+* JSON lists in JSON-LD like `{"@list":["a",4]}` are translated to nested typed terms
+  using the `"$list"` and `"$nil"` functions: `["$list","a",["$list",4,$nil]]`.
 * JSON maps like  `{"@name": "example", "@logic": ["p","?X",1]}` are used for 
   inserting logic into JSON-LD expressions and adding metainformation to logic formulas.
 
 The semantics of most JSFOL constructions stems directly from the semantics of the 
-corresponding TPTP constructions. The semantics of expressions like lists, null, 
+corresponding TPTP constructions. The semantics of lists, null, 
 if ... then ... etc not present in TPTP are presented explicitly in the current document.
 
 
 Initial conversion and proof examples
 -------------------------------------
 
-JSON-LD-LOGIC should guarantee clear JSON <-> TPTP transformation 
-while not covering all of the more complex TPTP sublanguages with features
-like higher order formulas.
-
-TPTP <-> JSON conversion is currently defined only for the non-higher order 
-fragment (FOF and CNF sublanguages) of TPTP along with a both limited and extended
-subset of the type fragment - TFF with arithmetic - of TPTP.
+JSON-LD-LOGIC defines direct JSON <-> TPTP conversion for the first order fragment
+(FOF and CNF sublanguages) of TPTP along with a limited and extended subset of 
+the typed sublanguage TFF with arithmetic.
 
 The first example above can be converted to TPTP as:
 
@@ -158,8 +153,8 @@ The proofs in this document are json objects with two keys:
 The formulas in the proof are always just lists of atoms (called *clauses*) treated
 as a disjunction (or). Negation is prefixed as a minus sign `-` to the predicate:
 `["-brother","mike","pete"]` means the same as `["not" ["brother","mike","pete"]]`.
-Strings prefixed by `?:` like `?:X` are *free variables* implicitly assumed to be quantified by "forall".
-`["in","frm_N" ]` means that the clause stems from the fact/rule number *N* was given as input.
+Strings prefixed by `?:` like `?:X` are *free variables* implicitly assumed to be quantified by *forall*.
+`["in","frm_N" ]` means that the clause stems from the fact/rule number *N*  given as input.
 `["mp", 1, 2]`  means that this clause was derived by modus ponens (i.e. the 
 [resolution rule](https://en.wikipedia.org/wiki/Resolution_(logic))
 from previous steps 1 and 2. More concretely, the first literals of both were cut off and
@@ -189,7 +184,7 @@ The second example above can be converted to TPTP as:
 
     fof(frm_3,negated_conjecture,(! [X] : ($arc(X,grandfather,john) => $ans(X)))).
 
-and given the following refutation proof in json:
+giving the following refutation proof in json:
 
     {"result": "proof found",
 
@@ -231,7 +226,7 @@ the equality predicate.
 `Full language` adds compatibility with JSON-LD along with support for
 an arithmetic-plus-distinct-symbols part of the TPTP typed sublanguage TFF along
 with an additional list type, several additional pre-defined functions, 
-convenience functions and operators. Full JSON-LD-LOGIC can be directly
+convenience functions and operators. Full JSON-LD-LOGIC can be 
 converted to the core fragment, except for the typed part using arithmetic, lists
 and distinct symbols.
 
@@ -294,8 +289,6 @@ from bottom to top:
 
       `[["~p", 1], "&", ["~", ["p",1]]`
       
-      Note: multiple "~" like "~~p" do not create a nested negation.
-
     * Strings starting with a hash sign and colon like  `"#:foo"` are distinct
       symbols used in the full language and should not be used in the core fragment.
 
@@ -353,75 +346,15 @@ Important aspects of the TPTP conversion:
   JSON-LD-LOGIC treats all non-special strings not prefixed by `?:`, `#:` or `_:`
   and not bound by a quantifier as ordinary symbols. Thus the JSON-LD-LOGIC symbols which do not
   satisfy the TPTP requirement (a) are converted to TPTP by surrounding them with single quotes
-  and adding a "\" character in front of all internal quote characters. The TPTP symbols surrounded
+  and adding a backslash character in front of all internal quote characters. The TPTP symbols surrounded
   by quotes are converted to JSON-LD-LOGIC by removing the surrounding quotes and adding 
-  a "\" character in front of internal double quotes.
+  a backslash character in front of internal double quotes.
 
 JSON-LD-LOGIC does not require that predicate or function symbols have a unique arity, although
 applications may pose such restrictions.
 
 The first element of an atom or a function term should be a string, except for
-atoms constructed by infix `"="` or `"!="`. 
-
-
-### Equality in the core fragment
-
-
-Predicates `"="` and `"!="` stand for equality and inequality and can occur
-only in the middle of a three-element list (infix form), like
-
-  `["a","=","b"]`
-  `["?:X","!=",["foo","?:X"]]`
-
-The following example uses equality:
-
-    [
-      [["father","john"],"=","pete"],
-      [["father","mike"],"=","pete"],
-      [["mother","john"],"=","eve"],
-      [["mother","mike"],"=","eve"],
-      [["father","pete"],"=","mark"],
-      [["mother","eve"],"=","mary"],
-      ["grandfather",["father",["father","?:0"]],"?:0"],
-      ["grandfather",["father",["mother","?:0"]],"?:0"],
-      ["~grandfather","mark","?:0"]
-    ]
-
-Conversion to the TPTP form is
-
-    fof(frm_1,axiom,(father(john) = pete)).
-    fof(frm_2,axiom,(father(mike) = pete)).
-    fof(frm_3,axiom,(mother(john) = eve)).
-    fof(frm_4,axiom,(mother(mike) = eve)).
-    fof(frm_5,axiom,(father(pete) = mark)).
-    fof(frm_6,axiom,(mother(eve) = mary)).
-    fof(frm_7,axiom,(! [X0] : grandfather(father(father(X0)),X0))).
-    fof(frm_8,axiom,(! [X0] : grandfather(father(mother(X0)),X0))).
-    fof(frm_9,axiom,(! [X0] : ~grandfather(mark,X0))).
-
-The proof of unsatisfiability we get uses equality. 
-Notice that the clauses in the proof do not strictly correspond
-to the core fragment, since (a) equality is written in prefix form
-as allowed only in the full language and (b) minus sign is
-used instead of tilde to indicate negation, also allowed
-in the full language.
-
-    {"result": "proof found",
-
-    "answers": [
-    {
-    "proof":
-    [
-    [1, ["in", "frm_2"], [["=",["father","mike"],"pete"]]],
-    [2, ["in", "frm_7"], [["grandfather",["father",["father","?:X"]],"?:X"]]],
-    [3, ["=", 1, [2,0,2]], [["grandfather",["father","pete"],"mike"]]],
-    [4, ["in", "frm_5"], [["=",["father","pete"],"mark"]]],
-    [5, ["simp", 3, 4], [["grandfather","mark","mike"]]],
-    [6, ["in", "frm_9"], [["-grandfather","mark","?:X"]]],
-    [7, ["mp", 5, 6], false]
-    ]}
-    ]}
-
+atoms constructed by infix equality `"="` or inequality `"!="`. 
 
 ### Formulas in the core fragment
 
@@ -483,10 +416,72 @@ is treated as a disjunction of elements `[L1,"|", ... ,"|",LN]` if
 * no element `Li` in the list is a connective or a positive or negative equality predicate.
 
 
+
+### Equality in the core fragment
+
+
+Predicates `"="` and `"!="` stand for equality and inequality and can occur
+only in the middle of a three-element list (infix form), like
+
+  `["a","=","b"]`
+  `["?:X","!=",["foo","?:X"]]`
+
+The following example uses equality:
+
+    [
+      [["father","john"],"=","pete"],
+      [["father","mike"],"=","pete"],
+      [["mother","john"],"=","eve"],
+      [["mother","mike"],"=","eve"],
+      [["father","pete"],"=","mark"],
+      [["mother","eve"],"=","mary"],
+      ["grandfather",["father",["father","?:0"]],"?:0"],
+      ["grandfather",["father",["mother","?:0"]],"?:0"],
+      ["~grandfather","mark","?:0"]
+    ]
+
+Conversion to the TPTP form is
+
+    fof(frm_1,axiom,(father(john) = pete)).
+    fof(frm_2,axiom,(father(mike) = pete)).
+    fof(frm_3,axiom,(mother(john) = eve)).
+    fof(frm_4,axiom,(mother(mike) = eve)).
+    fof(frm_5,axiom,(father(pete) = mark)).
+    fof(frm_6,axiom,(mother(eve) = mary)).
+    fof(frm_7,axiom,(! [X0] : grandfather(father(father(X0)),X0))).
+    fof(frm_8,axiom,(! [X0] : grandfather(father(mother(X0)),X0))).
+    fof(frm_9,axiom,(! [X0] : ~grandfather(mark,X0))).
+
+The proof of unsatisfiability we get uses equality. 
+Notice that the clauses in the proof do not strictly correspond
+to the core fragment, since (a) equality is written in prefix form
+as allowed only in the full language and (b) minus sign is
+used instead of tilde to indicate negation, also allowed
+in the full language.
+
+    {"result": "proof found",
+
+    "answers": [
+    {
+    "proof":
+    [
+    [1, ["in", "frm_2"], [["=",["father","mike"],"pete"]]],
+    [2, ["in", "frm_7"], [["grandfather",["father",["father","?:X"]],"?:X"]]],
+    [3, ["=", 1, [2,0,2]], [["grandfather",["father","pete"],"mike"]]],
+    [4, ["in", "frm_5"], [["=",["father","pete"],"mark"]]],
+    [5, ["simp", 3, 4], [["grandfather","mark","mike"]]],
+    [6, ["in", "frm_9"], [["-grandfather","mark","?:X"]]],
+    [7, ["mp", 5, 6], false]
+    ]}
+    ]}
+
+
+
 ### Formula list
 
 
-The JSON-LD-LOGIC core fragment document must be a list of formulas like this:
+The JSON-LD-LOGIC core fragment document must be a list of formulas like
+the following example:
  
     [      
       ["brother","john","mike"],
@@ -513,10 +508,10 @@ The previous example is thus equivalent to:
  
 Notice that 
 
-* The existentially quantified "Y" variable in the last formula is dependent on
-  the leading "X" variable of the same formula.
+* The existentially quantified `"Y"` variable in the last formula is dependent on
+  the leading `"X"` variable of the same formula.
 
-* The free variables "?:X" in the last two formulas of the example before conversion 
+* The free variables `"?:X"` in the last two formulas of the example before conversion 
   are distinct from each other.
   
 
@@ -534,25 +529,25 @@ top level formula lists. Example:
     }
  
  
-where the predefined keys correspond to the TPTP positional metainformation values:
+The following predefined keys correspond to the TPTP positional metainformation values:
 
-* `"@name"` for the construction name: the value is a formula name without a logical meaning,
+* `"@name"` value is a formula name without a logical meaning,
   useful for increasing the readability of proofs.
 
 * `"@role"` value should be normally either "axiom", "assumption", "conjecture" or a
-  "negated_conjecture": normally used for annotating formulas for their intended use.
+  "negated_conjecture". It is used for annotating formulas for their intended use.
   A longer description and more options are given below.  
 
 * `"@logic"` for the JSON-LD-LOGIC formula with the logical content as described before.
 
-All of these key/value pairs are optional. If "@logic" is not present, the object should
-be (normally) just ignored by the application.
+All of these key/value pairs are optional. If `"@logic"` is not present, the object should
+be ignored by the application.
 
-In case a formula list contains such a JSON object, then
+In case a formula list contains a JSON object, then
 
-* If `"name"` is not present, then the system may optionally construct a new name.
+* If `"name"` is not present, the system may optionally construct a new name.
 
-* If `"role"` is not present, then its value is assumed to be "axiom". 
+* If `"role"` is not present, the corresponding value is assumed to be "axiom". 
 
 The special `"conjecture"` role value in TPTP forces the content to be negated when asking
 for unsatisfiability of a formula list. 
@@ -567,9 +562,9 @@ the positive `["p","a"]` and in the second "negated_conjecture" with the negativ
     ]
 
 represents a provable formula `(p(a) & p(b)) => p(a)`, the negation of which
-is equivalent to an unsatisfiable `p(a) & p(b) & ~p(a)`
+is equivalent to an unsatisfiable `p(a) & p(b) & ~p(a)`.
 
-whereas 
+The following example
 
     [
       ["p","a"],
@@ -579,7 +574,7 @@ whereas
 
 also represents an unsatisfiable formula `p(a) & p(b) & ~p(a)`.
 
-As said before, *free variables* are not implicitly bound by a "forall" quantifier
+As an exception the *free variables* are not implicitly bound by a "forall" quantifier
 in the formula with a *conjecture* role: instead, they are implicitly
 bound by the "exists" quantifier: this corresponds better to the intuitive 
 understanding of free variables in the conjecture, especially in the light
@@ -609,7 +604,7 @@ which is equivalent to
 
 
 For other *role* values we cite "The Formulae Section" of 
-[TPTP technical manual](http://tptp.org/TPTP/TR/TPTPTR.shtml "TPTP technical manual"): 
+[TPTP technical manual](http://tptp.org/TPTP/TR/TPTPTR.shtml): 
 the role gives the user semantics of the formula, one of `axiom, hypothesis, definition,
 assumption, lemma, theorem, corollary, conjecture, negated_conjecture, plain, type`, and `unknown`. ..."
 
@@ -1404,220 +1399,4 @@ And we get the expected result
   Note: these arithmetic functions take exactly two arguments and
   can occur only in the lists with the length three.
   
-
-
-## null
-
-* JSON `null` value stands for an unknown value similar to the SQL null value. 
-  The meaning for `null` will be given in a later chapter.
-
-
-
-      ' "$sum", "$less", "$is_int"` are used as function, predicate or type symbols
-      with a concrete predefined semantics in TPTP. We note that all the
-      predefined functions and predicates in TPTP start with `$`.
-
-      The full list of predefined strings in the core fragment:
-
-      `"~", "|", "&",  "<=>", "=>", "<=", "<~>", "~|", "~&", "@", 
-      "forall", "exists", 
-      "=", "!=",      
-      "$less", "$lesseq","$greater", "$greatereq",
-      "$sum", "$difference", "$product", "$quotient", "$quotient_e",
-      "$remainder_e", "$remainder_t", "$remainder_f", "$floor", "$ceiling",
-      "$uminus", "$truncate", "$round", 
-      "$is_int", "$is_real",     
-      "$to_int", "$to_real".
-      "$is_number"`
-
-      The full language adds symbols 
-
-      `"$is_atom",  "$is_distinct", "$is_list",
-       "$list", "$nil", "$first", "$rest"
-      
-
-    * Strings bound by a quantifier in JSON stand for corresponding variables in
-      FOL and TPTP. A bound variable *must* start with an upper case letter.     
-      In the following example all the variables are existentially quantified:        
-
-      `["exists",["X1","X2","U"],["p","X1","X2","U"]]`
-   
-    * Strings starting with a question mark and colon like  "?:X1" 
-      and *not bound by a quantifier* 
-      stand for free variables in FOL and are assumed to be universally quantified
-      in TPTP. Examples: 
-
-      `"?:X", "?:Y1", "?:Some car"`    
-   
-    * Strings prefixed by `"#:"` (for distinct) stand for distinct objects in TPTP.
-      Such "#:someobj" is always considered unequal to:
-      
-      * any other syntactically different distinct object like "#:otherobj", 
-      * any object with either an arithmetic type like integer, real.
-      * any list, i.e. either "$nil" or a term led by "$list".
-
-      However, a distinct object like "#:someobj" may be equal to an 'ordinary' object
-      like "some_thing".
-
-    * Strings prefixed by `"~"` and located in the first position of a list in a
-      formula context are assumed to construct a negated atom led by a symbol
-      constructed from the rest of the string. 
-      For example, the arguments of the following "&" are equivalent:
-
-      `[["~p", 1], "&", ["~", ["p",1]]`
-      
-      Note: multiple "~" like "~~p" do create a nested negation.
-      
-
-    * Strings without any of the previously described prefixes `d:`, `r:`, `~` and 
-      *starting with a lower case or a non-alphabetic letter* 
-      in a term stand for ordinary predicate or function symbols, unless
-      they are one of the predefined strings like `"&", "$sum", "$real"` etc.
-      Examples:
-
-      `"p", "foo", "bar 23", "_here", "++something", "1 to 3"`
-
-
-
-The `$distinct` is a special unlimited-length-list prefix predicate for specifying
-that many terms are  unequal to each other. Example:
-
-  `["$distinct","john","mike","pete","andrew"]` 
-
-The full list of arithmetic predicates and functions:
-    
-   `"$less", "$lesseq","$greater", "$greatereq",
-   "$uminus", "$sum", "$difference", "$product", "$quotient", "$quotient_e",
-   "$remainder_e", "$remainder_t", "$remainder_f", "$floor", "$ceiling",
-   "$truncate", "$round", "$is_int", "$is_rat", "$to_int", "$to_rat", "$to_real".`
-
-An example using arithmetic:
-
-   `["$less", ["$sum",1,2], ["$to_int",4.56]]`
-
-The full list of predefined types, all separate from each other:
-
-   `"$int", "$rat", "$real", "$i", "$o"`
-
-
-### Configurable differentiation between variables and constants 
-
-The JSFOL requirement that all variables start with an upper case letter and
-constants not, is dropped: any string bound by a quantifier is considered
-to be a variable, including strings starting with lower case letters.
-
-The variable/constant distinction and special string prefixes can be
-configured in a surrounding metainformation block by using the following 
-keys:
-
-*  `"variable_prefix"` : if present, then any string starting with the value
-  of the key is considered to be a free variable, all the other strings are 
-  considered to be constant/function/predicate symbols unless they are bound,
-  predefined or have some other defined prefix.
-*  `"distinct_prefix"` : similarly redefines the default `d:` prefix for
-  distinct symbols.
-*  `"rational_prefix"` : similarly redefines the default `r:` prefix for
-   rationals.
-
-In case a `"variable_prefix"` is not defined, the JSFOL upper case first character
-convention still holds for distinguishing free variables and constants.
-
-In the following example `"x"` is a quantified variable, `"?something"` 
-is a free variable, `"##an_object"`is a distinct constant and
-`"John"` is an ordinary constant:
-
-      {"variable_prefix" : "?",
-       "distinct_prefix" : "##",
-       "content": ["formulas",
-         ["forall",["x"],["p","x","?something","##an_object","John"]]
-       ]
-      }
-
-### Questions
-
-
-A question indicates that in addition to proving a conjecture, suitable values
-for the existentially quantified variables should be found.
-
-Citing TPTP: questions are written like conjectures, but using the *question* role
-instead of the *conjecture* role. The outermost existentially quantified variables
-are the ones that the user wants values for, i.e., their sets of instatiations are
-the answer. Example:
-
-    {"role": "question",
-     "content": ["exists","["X","Y"], ["brother","X","Y"]] }
-
-
-### Additional predefined predicates and functions present in JSFOL+
-
-  
-The following infix arithmetic functions and comparison predicates operate on
-all number types and are converted to the obviously corresponding functions/predicates
-of the core JSFOL:
-
-* Infix `"*","+","-","/"`.
-
-The functions above are left-associative.
-  
-
-### Additional logical connectives in JSFOL+
-
-
-The following "convenience" connectives and constants `-, not, and, or, if ... then ..., null`
-are translated to standard JSFOL constructions.
-
-The minus sign `-` can be used instead of the tilde `~` both as a logical negation and
-as a prefix of a string, indicating that the string is a predicate which has to be
-negated.
-
-The `"not"` connective can be used as a negation connective instead of the tilde `"~"`.
-
-The `"and"` and `"or"` connectives can be used instead of the "&" and "|" correspondingly,
-whereas they can be used both in the infix and prefix form, the latter form taking an 
-arbitrary number of arguments like this:
-
-  `["and", ["p",1], ["foo","?X", "a], ["bar"]]`
-
-
-The `"and"` with no arguments is equivalent to `true` and the `"or"` with no arguments to `false`.
-
-The mixfix operator `if..then..` can be used. The list of formulas before `then` is treated
-as a conjunction premiss of the implication and the list after `then` as a disjunction
-consequent of the implication.  Example:
-
-  `["if", "a", "b", "c", "then", "d", "e"]`
-
-  is translated as 
-
-  `[["a","&","b","&","c"], "=>", ["d","|","e"]]`  
-
-
-The `null` symbol of JSON is treated analogously to the SQL `null` representing a missing
-or unknown value. The translation mechanism of eliminating a `null` inside some formula
-`F` is as follows:
-
-* Create a new variable `V` not occurring in `F`. I.e. `V` is a new string.
-* Replace an atom `[...null....]` where the eliminated `null` occurs by a formula
-
-   `["exists", [V], [....V....]]`
-
-where this particular occurrence of `null` is replaced by the variable `V'.
-
-Example:
-
-   `["father","john",null]` 
-
-is translated as 
-
-   `["exists", ["X"], ["father","john","X"]]`. 
-
-Example:
-
-   `[["is_father","X"], "<=>", ["father","X",null]]` 
-
-is translated as 
-
-   `[["is_father","X"], "<=>", ["exists", ["Y"], ["father","X","Y"]]]`
-    ` 
-   
 
