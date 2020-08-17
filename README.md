@@ -2,12 +2,15 @@
 JSON-LD-LOGIC: JSON representation of first-order logic formulas
 =================================================================
 
-*Draft version 0.7: looking for discussion and feedback*
+*Draft version 0.7: looking for comments and recommendations*
 
 
 tanel.tammet@gmail.com
 
 with contributions from schulz@eprover.org and geoff@cs.miami.edu
+
+Contents
+--------
 
 * [Goals and summary](#Goals-and-summary)
 * [Initial conversion and proof examples](#Initial-conversion-and-proof-examples)
@@ -23,7 +26,7 @@ with contributions from schulz@eprover.org and geoff@cs.miami.edu
 * [Full JSON-LD-LOGIC](#Full-JSON-LD-LOGIC)
   * [JSON objects aka maps](#JSON-objects-aka-maps)
     * [Ordinary and distinct symbols](#Ordinary-and-distinct-symbols)
-    * [Datatypes via type and typed symbols](#Datatypes-and-typed-symbols)
+    * [Datatypes and typed symbols](#Datatypes-and-typed-symbols)
     * [Missing id and blank nodes](#Missing-id-and-blank-nodes)
   * [Introducing logic to JSON-LD](#Introducing-logic-to-JSON-LD)
     * [ans and question](#ans-and-question)
@@ -49,17 +52,17 @@ The main goals of JSON-LD-LOGIC are:
   most high-end full FOL reasoners, as described in the  
   [TPTP technical manual](http://tptp.org/TPTP/TR/TPTPTR.shtml#ProblemPresentation).
 * Compatibility with [JSON-LD](https://json-ld.org/), 
-  see the [latest W3C draft](https://w3c.github.io/json-ld-syntax/). 
+  see the [W3C recommendation](https://www.w3.org/TR/json-ld11/). 
 
-The conversion and proof examples in this document have been made using 
+The conversion and proof examples in this document have been created using 
 the [gkc](https://github.com/tammet/gkc/)
 reasoner and toolkit implementing both JSON-LD-LOGIC and TPTP languages.
-Gkc is able to answer the questions and present proofs,
+Gkc is able to find and present proofs, answer questions,
 clausify JSON-LD-LOGIC expressions and convert them to or from the TPTP language. 
 Check out a [web playground](http://logictools.org/json.html) for JSON-LD-LOGIC, 
 running gkc in the browser using WASM. 
 
-A simple unsatisfiable example using core JSON-LD-LOGIC stating some facts, rules and a question:
+A simple unsatisfiable example using core JSON-LD-LOGIC stating some facts, rules and finally a question in the negated form:
 
     [
       ["brother","john","mike"],
@@ -69,7 +72,7 @@ A simple unsatisfiable example using core JSON-LD-LOGIC stating some facts, rule
       ["~brother","mike","pete"]
     ]
 
-Another example using full JSON-LD-LOGIC demonstrating the combination of standard logic syntax
+Another example using full JSON-LD-LOGIC demonstrating the combination of a more conventional logic syntax
 with the JSON-LD syntax, using both explicit quantifiers and free variables, 
 convenience operators and indicating a question to be answered:
 
@@ -113,15 +116,32 @@ The main features of the syntax are:
   inserting logic into JSON-LD expressions and adding metainformation to logic formulas.  
 * JSON strings can represent ordinary constant/function/predicate symbols like `"foo"`,
   free variables like `"?:X"`, blank nodes like `"_:b0"` and distinct symbols like `"#:bar"`,
-  using a special JSON-LD-style *prefix*. 
-* Arithmetic, string operations on distinct symbols and a list type are defined.  
+  using special JSON-LD-style *prefixes*. 
+* Arithmetic, a list type, string operations on distinct symbols and the semantics for null are defined.  
 * JSON lists in JSON-LD like `{"@list":["a",4]}` are translated to nested typed terms
-  using the `"$list"` and `"$nil"` functions: `["$list","a",["$list",4,$nil]]`.
+  using the `"$list"` and `"$nil"` functions: `["$list","a",["$list",4,"$nil"]]`.
 
 
 The semantics of most JSFOL constructions stems directly from the semantics of the 
 corresponding TPTP constructions. The semantics of lists, null, 
 if ... then ... etc not present in TPTP are presented explicitly in the current document.
+
+Despite following the RDF semantics of JSON-LD, JSON-LD-LOGIC does not include
+RDF or RDFS axioms like the transitivity of `subClassOf`. Such axioms can
+be written in the JSON-LD-LOGIC or TPTP language and explicitly added to the formula to be proved.
+The [TPTP axiom collection](http://www.tptp.org/cgi-bin/SeeTPTP?Category=Axioms)
+contains versions of RDF, RDFS and OWL axioms as `SWB*.ax` files. For an example, see the
+[RDFS axioms](http://www.tptp.org/cgi-bin/SeeTPTP?Category=Axioms&File=SWB003+0.ax).
+Before using these, one should modify their function and constant names to the
+values preferred: in particular, `iext` should be renamed `$arc`. It is also possible
+to avoid these axioms altogether and devise axioms suitable for the specific task.
+The examples in the current document are self-contained and do not use any
+axioms in addition to the ones explicitly present in the examples.
+
+The current version of the document does not cover all the advanced features of the
+W3C JSON-LD recommendation like @container, @direction, @index, @prefix, @propagate,
+@protected, @reverse.
+
 
 
 Initial conversion and proof examples
@@ -130,6 +150,9 @@ Initial conversion and proof examples
 JSON-LD-LOGIC defines direct JSON <-> TPTP conversion for the first order fragment
 (FOF and CNF sublanguages) of TPTP along with a limited and extended subset of 
 the typed sublanguage TFF with arithmetic.
+
+Due to the goals of the current document it contains a number of JSON-LD-LOGIC 
+examples together with their translation to the TPTP language and a proof found.
 
 The first example above can be converted to TPTP as:
 
@@ -141,11 +164,11 @@ The first example above can be converted to TPTP as:
 
 The TPTP syntax wraps formulas into the `fof(name,role,formula).`
 construction terminated by the period. 
-The exclamation mark `!` denotes universal quantifier (forall)
-and the question mark `?` denotes existential quantifier (exists).
+The exclamation mark `!` denotes *universal quantifier* (for all)
+and the question mark `?` denotes *existential quantifier* (exists).
 Variables have to start with the uppercase letter, non-variable symbols
 with a lowercase letter, underscore `_` or dollar `$`. The logical
-operator `&` is conjunction (and), `=>` is implication, `~` is negation.
+operator `&` denotes *conjunction* (and), `=>` denotes *implication*, `~` denotes *negation*.
 
 We obtain the following refutation proof in json:
 
@@ -175,17 +198,22 @@ The proofs in this document are json objects with two keys:
   Here we did not ask to find a concrete person, so we have only 
   a single answer containing just a `proof` key indicating a list with the
   numbered steps of the proof found:
-  each step is either a used input fact / rule or a derived fact / rule.
+  each step has a form `[clause id, derivation rule and sources, clause]` where the clause
+  either stems from an input fact / rule or is derived from the sources.
 
 The formulas in the proof are always just lists of atoms (called *clauses*) treated
 as a disjunction (or). Negation is prefixed as a minus sign `-` to the predicate:
 `["-brother","mike","pete"]` means the same as `["not" ["brother","mike","pete"]]`.
 Strings prefixed by `?:` like `?:X` are *free variables* implicitly assumed to be quantified by *forall*.
-`["in","frm_N" ]` means that the clause stems from the fact/rule number *N*  given as input.
-`["mp", 1, 2]`  means that this clause was derived by modus ponens (i.e. the 
-[resolution rule](https://en.wikipedia.org/wiki/Resolution_(logic))
-from previous steps 1 and 2. More concretely, the first literals of both were cut off and
-the rest were glued together. `["mp", 7, 4, 8]` means that the clause was first 
+`["in","frm_N" ]` means that the clause stems from the *N*th fact/rule given as input.
+Observe that one input rule may generate a number of different clauses and
+use *Skolemization* to create new function and constant symbols.
+
+`["mp", 1, 2]`  means that this clause was derived by the 
+[resolution rule](https://en.wikipedia.org/wiki/Resolution_(logic)) (i.e. generalized modus ponens)
+from the earlier sources 1 and 2 present in the proof. More concretely, the first literals of both were cut off and
+the remaining parts were concatenated under the unifying substitution. 
+`["mp", 7, 4, 8]` means that the clause was first 
 derived from clauses 7 and 4 and then the clause 8 was used for and additional
 simplifying resolution step.
 
@@ -1312,7 +1340,7 @@ JSON-LD uses the `"@graph"` key for two objectives:
 * If an object has an id, the conjunction elements are not interpreted as RDF triplets, 
   but *quads* with the object id as a fourth element: the id indicates which graph the
   arc belongs to. JSON-LD-LOGIC converts such lists using the four-argument `"$narc"`
-  predicate (named arc).
+  predicate (named arc) with the graph id as the last argument.
    
 A grandfather example with two trivial named graphs and a rule merging the named graphs into one
 unnamed graph:   
@@ -1385,7 +1413,8 @@ And we get the expected result
 ## Numbers and arithmetic
 
 Although JSON-LD-LOGIC defines several functions and predicates on logic, it
-does not axiomatize the properties of these functions. Citing TPTP:
+does not axiomatize the properties of these functions except direct evaluation
+on numbers. Citing TPTP:
 
 The extent to which ATP systems are able to work with the arithmetic predicates and
 functions can vary, from a simple ability to evaluate ground terms, e.g., 
@@ -1425,11 +1454,13 @@ This said, the numbers and arithmetic functions and predicates are defined as fo
       "$quotient", "$quotient_e",
       "$remainder_e", "$remainder_t", "$remainder_f", 
       "$floor", "$ceiling",
-      "$uminus", "$truncate", "$round",       
-      "$is_number"`
-    
-    Note: the arithmetic functions take either two arguments or one argument:
-    they are not allowed to be applied to long lists of arguments.
+      "$uminus", "$truncate", "$round"`
+
+    * An additional convenience predicate `"$is_number"` not present in TPTP,
+      evaluated as a disjunction of `"$is_int"`, `"$is_real"`.
+
+    Note: these comparison predicates and arithmetic functions take exactly two arguments and
+    can thus occur only in the lists with the length three.  
 
     Example: `["$less",["$sum",1,["$to_int",2.1]],["$product",3,3]]`
 
@@ -1443,8 +1474,14 @@ This said, the numbers and arithmetic functions and predicates are defined as fo
   Example: `["$less",[1,"+",[1,"+",2]],[3,"*",3]]`
 
   Note: these arithmetic functions take exactly two arguments and
-  can occur only in the lists with the length three.
-  
+  can thus occur only in the lists with the length three.
+
+The arithmetic predicates and functions can be applied to any types of objects, including
+variables and functional terms: if the arguments are not numbers, the application is in most
+cases simply left as is, without evaluation. However, an implementation may, for example,
+detect that under given conditions two non-numeric terms cannot be equal and evaluate a formula
+like `[["$greater","?:X",0], "=>", [["$sum",1,"?:X"],"=","?:X"]]` to *false*. JSON-LD-LOGIC
+does neither require nor prohibit such evaluations.
 
 ## Lists and list functions
 
@@ -1458,11 +1495,15 @@ triplets.
 A list is converted using the special `$list` function appending a first argument to
 the second argument and the `$nil` constant for an empty list.
 
-Terms constructed using `$list` or `$nil` are interpreted as having a list type: 
+Terms constructed using `$list` or `$nil` are interpreted as having a *list type*: 
 
 * A list is inequal to any number or a distinct symbol.
 
-* Syntactically different lists built of lists, numbers and distinct symbols are inequal.
+* Syntactically different lists A and B are unequal if at any position the corresponding
+  elements of A and B are unequal typed values: numbers, lists or distinct symbols.
+
+For example, the atom `[["$list","a","$nil"],"=",["$list","b","$nil"]]` does not evaluate to *false* while
+`[["$list","a",["$list","#:c",$nil"]],"=",["$list","?:X",["$list",1,$nil"]]` does evaluate to *false*.
 
 This allows defining different functions on lists using the equality predicate.
 
@@ -1474,10 +1515,18 @@ JSON-LD-LOGIC defines a predicate and two functions on lists:
 
 * `["$rest",L]`  returns the rest of the list, i.e. the result of removing the first element.
 
+These functions can be applied to non-list arguments, where they are left as is and not 
+evaluated.
+
+Observe that since JSON-LD-LOGIC does not contain a theory of arithmetic, lists or strings,
+the example formula ["exists",["X"],["$is_list","X"]] is not guaranteed to be provable:
+an implementation may prove it or not, depending on the particular theory and a proof search method
+implemented. 
 
 The following example defines functions for counting the length of the list and summing
-the numeric elements and uses these functions in a rule for deriving a `"goodcompany"` type
-as an object with at least three customers and revenues over 100.
+the numeric elements. Then it uses these functions in a rule for deriving a `"goodcompany"` type
+as an object with at least three customers and revenues over 100. Finally we ask to find an
+object with the `"goodcompany"` type.
 
     [
     {
@@ -1576,16 +1625,28 @@ Result:
 Since distinct symbols (strings prefixed by `#:`) can be viewed as strings, JSON-LD-LOGIC 
 defines a function and three predicates on distinct symbols:
 
-* `["$strlen",S]` returns the integer length of a distinct symbol S.
+* `["$strlen",S]` returns the integer length of a distinct symbol S as a string.
 
 * `["$substr", A, B]` evaluates to *true* if a distinct symbol A is a substring of a distinct symbol B, 
-   and *false* otherwise.
+   and *false* otherwise, provided that A and B are distinct symbols.
 
 * `["$substrat", A, B, C]` evaluates to *true* if a distinct symbol A is a substring of a 
-   distinct symbol B exactly at the integer position C (starting from 0), and *false* otherwise.
+   distinct symbol B exactly at the integer position C (starting from 0), and *false* otherwise,
+   provided that A and B are distinct symbols and C is an integer.
 
 * `["$is_distinct", A]` evaluates to *true* if A is a distinct symbol and *false* if A is a number or a list.
 
+The prefix `"#:"` part of a distinct symbol is not considered to be a part of the symbol as a string: for example,
+`["$strlen","#:ab"]` should evaluate to 2.
+
+The first three functions can be applied to non-distinct arguments, where they are left as is and not 
+evaluated. The last predicate can be similarly applied to any arguments. For example, `["$is_distinct", "a"]`
+is not evaluated, while `["$is_distinct", 1]` is evaluated to *false* and `["$is_distinct", "#:d"]` is evaluated to *true*.
+
+Observe that since JSON-LD-LOGIC does not contain a theory of arithmetic, lists or strings,
+the example formula ["exists",["X"],["$is_distinct","X"]] is not guaranteed to be provable:
+an implementation may prove it or not, depending on the particular theory and a proof search method
+implemented. 
 
 The following is an example of using distinct symbols: we define a rule saying that whenever sets of type values
 of two objects contain different distinct elements, these objects must be different. Notice that ordinary
