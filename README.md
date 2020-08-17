@@ -21,7 +21,7 @@ The main goals of JSON-LD-LOGIC are:
 * Ease of understanding and writing.
 * Compatibility with the [TPTP](http://tptp.org "TPTP") language used by 
   most high-end full FOL reasoners, as described in the  
-  [TPTP technical manual](http://tptp.org/TPTP/TR/TPTPTR.shtml "TPTP technical manual").
+  [TPTP technical manual](http://tptp.org/TPTP/TR/TPTPTR.shtml#ProblemPresentation).
 * Compatibility with [JSON-LD](https://json-ld.org/), 
   see the [latest W3C draft](https://w3c.github.io/json-ld-syntax/). 
 
@@ -44,8 +44,8 @@ A simple unsatisfiable example using core JSON-LD-LOGIC stating some facts, rule
     ]
 
 Another example using full JSON-LD-LOGIC demonstrating the combination of standard logic syntax
-with the JSON-LD syntax, using both explicit quantifiers and free variables, using
-convenience operators like if ... then ..., indicating a question to be answered:
+with the JSON-LD syntax, using both explicit quantifiers and free variables, 
+convenience operators and indicating a question to be answered:
 
     [
       {
@@ -78,19 +78,20 @@ convenience operators like if ... then ..., indicating a question to be answered
 
 The main features of the syntax are:
 
-* Terms and atoms are represented as JSON lists with predicate/function symbols 
+* Terms, atoms and logical formulas are represented as JSON lists with predicate/function symbols 
   in the first position (prefix form) like `["brother","john","pete"]`,
 * JSON-LD semantics in RDF is represented by the`"$arc"` predicate for triplets
   like `["$arc","pete","father","john"]` and an
-  `"$narc"` predicate for named triplets aka quads, like ["$narc","pete","father","john","eveknows"].
+  `"$narc"` predicate for named triplets aka quads like `["$narc","pete","father","john","eveknows"]`.
+* JSON maps like  `{"father:"john", "@logic": ["p","?:X",1]}` are used for 
+  inserting logic into JSON-LD expressions and adding metainformation to logic formulas.  
 * JSON strings can represent ordinary constant/function/predicate symbols like `"foo"`,
-  free variables like `"?:X"`, blank nodes like `"_:b0"` and distinct symbols like `"#:bar"`,  
+  free variables like `"?:X"`, blank nodes like `"_:b0"` and distinct symbols like `"#:bar"`,
   using a special JSON-LD-style *prefix*. 
-* Numeric arithmetic, string operations on distinct symbols and a list type are defined.  
+* Arithmetic, string operations on distinct symbols and a list type are defined.  
 * JSON lists in JSON-LD like `{"@list":["a",4]}` are translated to nested typed terms
   using the `"$list"` and `"$nil"` functions: `["$list","a",["$list",4,$nil]]`.
-* JSON maps like  `{"@name": "example", "@logic": ["p","?X",1]}` are used for 
-  inserting logic into JSON-LD expressions and adding metainformation to logic formulas.
+
 
 The semantics of most JSFOL constructions stems directly from the semantics of the 
 corresponding TPTP constructions. The semantics of lists, null, 
@@ -219,13 +220,13 @@ Two layers of JSON-LD-LOGIC
 
 `Core fragment` specifies minimal JSON syntax for writing logic formulas 
 which can be translated to the TPTP FOF and CNF sublanguages. All the TPTP FOF and CNF 
-formulas are directly convertible to the core JSON-LD-LOGIC. Both these
+formulas are directly convertible to the core JSON-LD-LOGIC. Both of these
 TPTP sublanguages cover standard first order logic with functions and 
 the equality predicate.
 
 `Full language` adds compatibility with JSON-LD along with support for
-an arithmetic-plus-distinct-symbols part of the TPTP typed sublanguage TFF along
-with an additional list type, several additional pre-defined functions, 
+an arithmetic-plus-distinct-symbols part of the TPTP typed sublanguage TFF plus
+an additional list type, several additional pre-defined functions, 
 convenience functions and operators. Full JSON-LD-LOGIC can be 
 converted to the core fragment, except for the typed part using arithmetic, lists
 and distinct symbols.
@@ -265,7 +266,7 @@ from bottom to top:
       The full list is:
       `"~", "|", "&",  "<=>", "=>", "<=", "<~>", "~|", "~&", "@", 
       "forall", "exists"`.
-      `"=", "!="` are pre-defined equality and inequality predicates.      
+      Pre-defined equality and inequality predicates are `"="` and `"!="`
 
     * Strings bound by a quantifier in JSON stand for corresponding variables in
       FOL and TPTP. A bound variable *must* start with an upper case letter.     
@@ -323,11 +324,11 @@ lisp s-expressions: the first element of a list stands for a predicate or a func
 
 Example:
 
-    `["foo","bar","?:Y","X",["f",["f","X]]]`
+    `["foo","bar","?:Y","a",["f",["f","b"]]]`
 
 stands for a TPTP term or atom 
 
-    `foo(bar,'X',Y,f(f('X')))` 
+    `foo(bar,Y,a,f(f(b)))` 
 
 where `Y` is a free variable.
 
@@ -641,13 +642,13 @@ The main additional features of the full language above the core fragment are:
   core fragment constructions. 
 
 * The semantics in RDF is represented by a special $arc predicate for triplets
-  like ["$arc","pete","father","john"] and an
-  $narc predicate for named triplets aka quads, like ["$narc","pete","father","john","eveknows"].
+  like `["$arc","pete","father","john"]` and an
+  $narc predicate for named triplets aka quads, like `["$narc","pete","father","john","eveknows"]`.
 
 * Numeric arithmetic, distinct symbols, string operations and a list type are provided.  
 
-* JSON lists in JSON-LD like {"@list":["a",4]} are translated to nested typed terms
-  using the "$list" and "$nil" functions, like ["$list","a",["$list",4,$nil]].
+* JSON lists in JSON-LD like `{"@list":["a",4]}` are translated to nested typed terms
+  using the `"$list"` and `"$nil"` functions, like `["$list","a",["$list",4,$nil]]`.
 
 * Several convenience operators are introduced.
 
@@ -689,8 +690,8 @@ symbols in logic, i.e. "john" and "pete" are not automatically considered
 to be distinct: they both could be potentially equal to some "John Pete Smith",
 for example.
 
-JSON-LD-LOGIC uses a special prefix `"#:` to indicate that a symbol
-is not equal to any other syntactically different symbols with the `"#:`
+JSON-LD-LOGIC uses a special prefix `#:` to indicate that a symbol
+is not equal to any other syntactically different symbols with the `#:`
 prefix and not equal to any numbers or lists.
 
 For example, both `["#:pete","=","#:john"]` and `["#:pete","=",2]`
@@ -698,10 +699,10 @@ must be evaluated to *false*, while `["pete","=","#:john"]` and `["pete","=",2]`
 are not evaluated to *false*.
 
 The *distinct symbols* can be seen as an extension of the *string* type; 
-string functions `"$substr"` and `"$substrat"` in JSON-LD-LOGIC can be
+several string functions defined by JSON-LD-LOGIC can be
 computed on distinct symbols.
 
-The distinct symbols are translated to the distinct symbols of the
+The distinct symbols of JSON-LD-LOGIC are translated to the distinct symbols of the
 TPTP language with the same semantics as described above. The distinct
 symbols of TPTP are surrounded by double quotes.
 
@@ -804,8 +805,9 @@ not be nested. It can contain other objects/maps though, interpreted in the same
 was as defined in the current specification: objects/maps can be nested in the
 the logical formula.
 
-The free variables occurring in the value of the `"@logic"` key and/or elsewhere
-in the same top-level list element have the whole element as its scope.
+Both the value of the `"@logic"` key and values of ordinary property keys may
+contain free variables. The free variables occurring in the value of the `"@logic"` key 
+and/or elsewhere in the same top-level list element have the whole element as its scope.
 
 The following example demonstrates a simple use of `"@logic"` along with the
 convenience operator `if ... then ...` and the `"@question"`
