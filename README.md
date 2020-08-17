@@ -545,9 +545,9 @@ be ignored by the application.
 
 In case a formula list contains a JSON object, then
 
-* If `"name"` is not present, the system may optionally construct a new name.
+* If `"@name"` is not present, the system may optionally construct a new name.
 
-* If `"role"` is not present, the corresponding value is assumed to be "axiom". 
+* If `"@role"` is not present, the corresponding value is assumed to be "axiom". 
 
 The special `"conjecture"` role value in TPTP forces the content to be negated when asking
 for unsatisfiability of a formula list. 
@@ -657,9 +657,9 @@ The main additional features of the full language above the core fragment are:
 JSON objects are interpreted according to the RDF semantics of JSON-LD, 
 with a few modifications described later in this section.
 
-The core principle is that each RDF triple `subject, predicate, object` is 
-converted to an atom `["$arc",subject,predicate,object]` indicating that
-there is an *arc* with the label *predicate* from the *subject* to *object*.
+The core principle is that each RDF triple `subject, property, value` is 
+converted to an atom `["$arc",subject,property,value]` indicating that
+there is an *arc* with the label *property* from the *subject* to *value*.
 
 The `"$arc"` symbol has no special semantics except that it is used for
 translating the triplets.
@@ -683,7 +683,7 @@ as indicated in the TPTP conversion.
 
 #### Ordinary and distinct symbols
 
-Importantly, both the *subject*, *predicate* and *object* strings 
+Importantly, both the *subject*, *property* and *value* strings 
 like "john" and "pete" in the example above are treated as ordinary
 symbols in logic, i.e. "john" and "pete" are not automatically considered
 to be distinct: they both could be potentially equal to some "John Pete Smith",
@@ -693,9 +693,9 @@ JSON-LD-LOGIC uses a special prefix `"#:` to indicate that a symbol
 is not equal to any other syntactically different symbols with the `"#:`
 prefix and not equal to any numbers or lists.
 
-For example, both `["#:pete","=","#:john"] and `["#:pete","=",2]`
-must be evaluated to *false*, while `["pete","=","#:john"] and `["pete","=",2]`
-are not evaluated to false.
+For example, both `["#:pete","=","#:john"]` and `["#:pete","=",2]`
+must be evaluated to *false*, while `["pete","=","#:john"]` and `["pete","=",2]`
+are not evaluated to *false*.
 
 The *distinct symbols* can be seen as an extension of the *string* type; 
 string functions `"$substr"` and `"$substrat"` in JSON-LD-LOGIC can be
@@ -1352,6 +1352,19 @@ And we get the expected result
 
 ## Numbers and arithmetic
 
+Although JSON-LD-LOGIC defines several functions and predicates on logic, it
+does not axiomatize the properties of these functions. Citing TPTP:
+
+The extent to which ATP systems are able to work with the arithmetic predicates and
+functions can vary, from a simple ability to evaluate ground terms, e.g., 
+$sum(2,3) can be evaluated to 5, through an ability to instantiate variables 
+in equations involving such functions, e.g., $product(2,$uminus(X)) = $uminus($sum(X,2)) 
+can instantiate X to 2, to extensive algebraic manipulation capability. 
+The syntax does not axiomatize arithmetic theory, but may be used to write axioms of the theory. 
+
+The same general principle holds for lists and distinct symbols interpreted as strings.
+
+This said, the numbers and arithmetic functions and predicates are defined as follows:
 
 * JSON numbers without a fractional part and exponent stand for integers in the typed
   fragment of TPTP. Different integers are assumed to be inequal.
@@ -1368,14 +1381,14 @@ And we get the expected result
 * The following TPTP prefix form arithmetic predicates and functions on
   integers and reals are used with the same meaning as in TPTP:
   
-   * Type detection predicates "$is_int", "$is_real".
+   * Type detection predicates `"$is_int"`, `"$is_real"`.
    
-   * Comparison predicates "$less", "$lesseq","$greater", "$greatereq".
+   * Comparison predicates `"$less"`, `"$lesseq"`, `"$greater"`, `"$greatereq"`.
 
-   * Type conversion functions "$to_int", "$to_real".
+   * Type conversion functions `"$to_int"`, `"$to_real"`.
 
    * Arithmetic functions on integers and reals:
-      "$sum", "$difference", "$product", 
+      `"$sum", "$difference", "$product", 
       "$quotient", "$quotient_e",
       "$remainder_e", "$remainder_t", "$remainder_f", 
       "$floor", "$ceiling",
@@ -1387,16 +1400,229 @@ And we get the expected result
 
     Example: `["$less",["$sum",1,["$to_int",2.1]],["$product",3,3]]`
 
-* Additional convenience predicate is used: "$is_number" is true
-  if and only if "$is_int" or "$is_real" is true.
+* Additional convenience predicate is used: `"$is_number"` is true
+  if and only if `"$is_int"` or `"$is_real"` is true.
 
 * Additional infix convenience functions `"+", "-", "*", "/"` are
-  used with the same meaning as $sum", "$difference", "$product" and 
-  "$quotient", respectively.
+  used with the same meaning as `"$sum"`, `"$difference"`, `"$product"` and 
+  `"$quotient"`, respectively.
 
   Example: `["$less",[1,"+",[1,"+",2]],[3,"*",3]]`
 
   Note: these arithmetic functions take exactly two arguments and
   can occur only in the lists with the length three.
   
+
+## Lists and list functions
+
+The RDF semantics of the JSON-LD list value construction like `"clients": {"@list":["a","b","c"]}`
+requires the construction of a number of triplets with `rdf:first`, `rdf:rest` and `rdf:nil`
+properties.
+
+JSON-LD-LOGIC deviates from this semantics since it can use function terms instead of
+triplets.
+
+A list is converted using the special `$list` function appending a first argument to
+the second argument and the `$nil` constant for an empty list.
+
+Terms constructed using `$list` or `$nil` are interpreted as having a list type: 
+
+* A list is inequal to any number or a distinct symbol.
+
+* Syntactically different lists built of lists, numbers and distinct symbols are inequal.
+
+This allows defining different functions on lists using the equality predicate.
+
+JSON-LD-LOGIC defines a predicate and two functions on lists:
+
+* `["$is_list",L]`  evaluates to *true* if A is a list and *false* is A is a number or a distinct symbol.
+
+* `["$first",L]`  returns the first element of the list.
+
+* `["$rest",L]`  returns the rest of the list, i.e. the result of removing the first element.
+
+
+The following example defines functions for counting the length of the list and summing
+the numeric elements and uses these functions in a rule for deriving a `"goodcompany"` type
+as an object with at least three customers and revenues over 100.
+
+    [
+    {
+      "@id":"company1",
+      "clients": {"@list":["a","b","c"]},
+      "revenues": {"@list":[10,20,50,60]}
+    },
+
+    [["listcount","$nil"],"=",0],
+    [["listcount",["$list","?:X","?:Y"]],"=",["+",1,["listcount","?:Y"]]],
+
+    [["listsum","$nil"],"=",0],
+    [["listsum",["$list","?:X","?:Y"]],"=",["+","?:X",["listsum","?:Y"]]],
+
+    ["if",
+    {"@id":"?:X","clients":"?:C","revenues":"?:R"},
+    ["$greater",["listcount","?:C"],2], 
+    ["$greater",["listsum","?:R"],100],
+    "then", 
+    {"@id":"?:X","@type":"goodcompany"} 
+    ],
+
+    {"@question": {"@id":"?:X","@type":"goodcompany"}}
+    
+    ]
+
+Conversion to TPTP:
+
+
+    fof(frm_1,axiom,($arc(company1,revenues,
+                                   $list(10,$list(20,$list(50,$list(60,$nil))))) & 
+                     $arc(company1,clients,
+                                   $list(a,$list(b,$list(c,$nil)))))).
+    fof(frm_2,axiom,(listcount($nil) = 0)).
+    fof(frm_3,axiom,(! [X,Y] : (listcount($list(X,Y)) = $sum(1,listcount(Y))))).
+    fof(frm_4,axiom,(listsum($nil) = 0)).
+    fof(frm_5,axiom,(! [X,Y] : (listsum($list(X,Y)) = $sum(X,listsum(Y))))).
+    fof(frm_6,axiom,(! [X,R,C] : 
+             ((($greater(listsum(R),100) & 
+                $greater(listcount(C),2)) & 
+                ($arc(X,revenues,R) & $arc(X,clients,C)))
+            => 
+             $arc(X,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',goodcompany)))).
+    fof(frm_7,negated_conjecture,(! [X] : 
+          ($arc(X,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',goodcompany) 
+          => 
+          $ans(X)))).
+
+Result:
+
+    {"result": "proof found",
+
+    "answers": [
+    {
+    "answer": [["$ans","company1"]],
+    "proof":
+    [
+    [1, ["in", "frm_2"], [["=",["listcount","$nil"],0]]],
+    [2, ["in", "frm_3"], [["=",["listcount",["$list","?:X","?:Y"]],[$sum,1,["listcount","?:Y"]]]]],
+    [3, ["=", 1, [2,0,7]], [["=",["listcount",["$list","?:X","$nil"]],1]]],
+    [4, ["=", 3, [2,0,7]], [["=",["listcount",["$list","?:X",["$list","?:Y","$nil"]]],2]]],
+    [5, ["=", 4, [2,0,7]], [["=",["listcount",["$list","?:X",["$list","?:Y",["$list","?:Z","$nil"]]]],3]]],
+    [6, ["in", "frm_6"], [["-$greater",["listsum","?:X"],100], ["-$greater",["listcount","?:Y"],2], 
+                          ["-$arc","?:Z","revenues","?:X"], ["-$arc","?:Z","clients","?:Y"], 
+                          ["$arc","?:Z","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","goodcompany"]]],
+    [7, ["in", "frm_1"], [["$arc","company1","revenues",["$list",10,["$list",20,["$list",50,["$list",60,"$nil"]]]]]]],
+    [8, ["mp", [6,2], 7], [["-$greater",["listsum",["$list",10,["$list",20,["$list",50,["$list",60,"$nil"]]]]],100],
+                          ["$arc","company1","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","goodcompany"], 
+                          ["-$greater",["listcount","?:X3"],2], 
+                          ["-$arc","company1","clients","?:X3"]]],
+    [9, ["in", "frm_4"], [["=",["listsum","$nil"],0]]],
+    [10, ["in", "frm_5"], [["=",["listsum",["$list","?:X","?:Y"]],[$sum,"?:X",["listsum","?:Y"]]]]],
+    [11, ["=", 9, [10,0,7]], [["=",["listsum",["$list","?:X","$nil"]],[$sum,"?:X",0]]]],
+    [12, ["=", 11, [10,0,7]], [["=",["listsum",["$list","?:X",["$list","?:Y","$nil"]]],
+                                    [$sum,"?:X",[$sum,"?:Y",0]]]]],
+    [13, ["=", 12, [10,0,7]], [["=",["listsum",["$list","?:X",["$list","?:Y",["$list","?:Z","$nil"]]]],
+                                    [$sum,"?:X",[$sum,"?:Y",[$sum,"?:Z",0]]]]]],
+    [14, ["=", 13, [10,0,7]], [["=",["listsum",["$list","?:X",["$list","?:Y",["$list","?:Z",["$list","?:U","$nil"]]]]],
+                                    [$sum,"?:X",[$sum,"?:Y",[$sum,"?:Z",[$sum,"?:U",0]]]]]]],
+    [15, ["simp", 8, 14], [["$arc","company1","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","goodcompany"], 
+                          ["-$greater",["listcount","?:X"],2],
+                          ["-$arc","company1","clients","?:X"]]],
+    [16, ["in", "frm_1"], [["$arc","company1","clients",["$list","a",["$list","b",["$list","c","$nil"]]]]]],
+    [17, ["=", [5,1,"L"], [15,0,1], 16], [["$arc","company1","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","goodcompany"]]],
+    [18, ["in", "frm_7"], [["-$arc","?:X","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","goodcompany"], 
+                          ["$ans","?:X"]]],
+    [19, ["mp", 17, 18], [["$ans","company1"]]]
+    ]}
+    ]}
+
+
+
+## Distinct symbols as strings 
+
+
+Since distinct symbols (strings prefixed by `#:`) can be viewed as strings, JSON-LD-LOGIC 
+defines a function and three predicates on distinct symbols:
+
+* `["$strlen",S]` returns the integer length of a distinct symbol S.
+
+* `["$substr", A, B]` evaluates to *true* if a distinct symbol A is a substring of a distinct symbol B, 
+   and *false* otherwise.
+
+* `["$substrat", A, B, C]` evaluates to *true* if a distinct symbol A is a substring of a 
+   distinct symbol B exactly at the integer position C (starting from 0), and *false* otherwise.
+
+* `["$is_distinct", A]` evaluates to *true* if A is a distinct symbol and *false* is A is a number or a list.
+
+
+The following is an example of using distinct symbols: we define a rule saying that whenever sets of type values
+of two objects contain different distinct elements, these objects must be different. Notice that ordinary
+symbols `"smith1"` and `"smith2"` could be equal or unequal: syntactic difference of ordinary symbols does not
+guarantee that they stand for different objects.
+
+
+    [
+    {
+      "@id":"smith1",
+      "@type":["#:person","baby"],
+      "name":"John Smith"  
+    },
+    {
+      "@id":"smith2",
+      "@type":["#:dog","newborn"],  
+      "name":"John Smith"  
+    },
+    ["if", 
+      {"@id":"?:X","@type":"?:T1"},
+      {"@id":"?:Y","@type":"?:T2"},
+      ["?:T1","!=","?:T2"],
+    "then", 
+      ["?:X","!=","?:Y"]
+    ],
+    {"@question": ["smith1","!=","smith2"]}
+    ]
+
+
+Conversion to TPTP: 
+
+    fof(frm_1,axiom,($arc(smith1,name,'John Smith') & 
+                    ($arc(smith1,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',baby) & 
+                    $arc(smith1,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',"person")))).
+    fof(frm_2,axiom,($arc(smith2,name,'John Smith') & 
+                    ($arc(smith2,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',newborn) &
+                     $arc(smith2,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',"dog")))).
+    fof(frm_3,axiom,(! [X,T1,Y,T2] : (((~(T1 = T2) & 
+                                      $arc(Y,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',T2)) &
+                                      $arc(X,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',T1)) 
+                                     =>
+                                      ~(X = Y)))).
+    fof(frm_4,negated_conjecture,~~(smith1 = smith2)).
+
+
+The proof:
+
+    {"result": "proof found",
+
+    "answers": [
+    {
+    "proof":
+    [
+    [1, ["in", "frm_3"], [["-$arc","?:X","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","?:Y"], 
+                          ["-$arc","?:Z","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","?:U"],
+                          ["-=","?:Z","?:X"], 
+                          ["=","?:U","?:Y"]]],
+    [2, ["in", "frm_4"], [["=","smith1","smith2"]]],
+    [3, ["mp", [1,2], 2], [["-$arc","smith2","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","?:X3"], 
+                           ["-$arc","smith1","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","?:Y3"],
+                           ["=","?:Y3","?:X3"]]],
+    [4, ["simp", 3, 2], [["-$arc","smith2","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","?:X"], 
+                         ["-$arc","smith2","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","?:Y"], 
+                         ["=","?:Y","?:X"]]],
+    [5, ["in", "frm_2"], [["$arc","smith2","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","#:dog"]]],
+    [6, ["mp", 4, 5], [["-$arc","smith2","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","?:X"],
+                       ["=","?:X","#:dog"]]],
+    [7, ["in", "frm_1"], [["$arc","smith1","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","#:person"]]],
+    [8, ["simp", 7, 2], [["$arc","smith2","http://www.w3.org/1999/02/22-rdf-syntax-ns#type","#:person"]]],
+    [9, ["mp", 6, 8], false]
+    ]}
+    ]}
 
