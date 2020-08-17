@@ -23,14 +23,14 @@ with contributions from schulz@eprover.org and geoff@cs.miami.edu
 * [Full JSON-LD-LOGIC](#Full-JSON-LD-LOGIC)
 * [JSON objects aka maps](#JSON-objects-aka-maps)
 * [Ordinary and distinct symbols](#Ordinary-and-distinct-symbols)
-* [Datatypes via @type and typed symbols](#Datatypes-via-@type-and-typed-symbols)
-* [Missing @id and blank nodes](#Missing-@id-and-blank-nodes)
-* [@logic: introducing logic to JSON-LD](#@logic:-introducing-logic-to-JSON-LD)
-* [$ans and "@question"](#$ans-and-"@question")
+* [Datatypes via type and typed symbols](#Datatypes-and-typed-symbols)
+* [Missing id and blank nodes](#Missing-id-and-blank-nodes)
+* [Introducing logic to JSON-LD](#Introducing-logic-to-JSON-LD)
+* [ans and question](#ans-and-question)
 * [Convenience connectives and predicates](#Convenience-connectives-and-predicates)
-* [Multiple values, @context and namespaces, @base, @type.](#Multiple-values,-@context-and-namespaces,-@base,-@type.)
-* [Nested objects/maps](#Nested-objects/maps)
-* [Graphs, named graphs and quads: the $narc predicate](Graphs,-named-graphs-and-quads:-the-$narc-predicate)
+* [Multiple values, context and namespaces, base, type.](#Multiple-values,-context-and-namespaces,-base,-type)
+* [Nested objects aka maps](#Nested-objects-aka-maps)
+* [Graphs, named graphs and quads with the narc predicate](#Graphs,-named-graphs-and-quads-with-the-narc-predicate)
 * [Numbers and arithmetic](#Numbers-and-arithmetic)
 * [Lists and list functions](#Lists-and-list-functions)
 * [Distinct symbols as strings](#Distinct-symbols-as-strings)
@@ -125,7 +125,7 @@ if ... then ... etc not present in TPTP are presented explicitly in the current 
 
 
 Initial conversion and proof examples
--------------------------------------
+---------------------------------------
 
 JSON-LD-LOGIC defines direct JSON <-> TPTP conversion for the first order fragment
 (FOF and CNF sublanguages) of TPTP along with a limited and extended subset of 
@@ -762,7 +762,7 @@ stems from the following observations:
   in the logical meaning.
 
 
-### Datatypes via @type and typed symbols
+### Datatypes and typed symbols
 
 JSON-LD-LOGIC does not currently specify the treatment of `@type` as a datatype
 (say, XML Schema type as used in RDF). The special types of strings like
@@ -778,7 +778,7 @@ indicated by the `"@list"` key (described later) and distinct symbols analogous
 to strings as built-in types.
 
 
-### Missing @id and blank nodes
+### Missing id and blank nodes
 
 In case a JSON object does not contain an `"@id"` key, a new symbol will 
 be automatically generated for the *object*.
@@ -821,7 +821,7 @@ documents/files are merged in some way.
 
 
 
-## @logic: introducing logic to JSON-LD 
+## Introducing logic to JSON-LD 
 
 The value of the `"@logic"` key in an object/map is treated as a logical formula,
 using either the core fragment described before or the full JSON-LD-LOGIC language.
@@ -907,7 +907,7 @@ scope is limited to the top level list element: `"?:X"` in
  `{"@id":"?:X","grandfather":"john"}`.
 
 
-### $ans and "@question"
+### ans and question
 
 A conventional way to find out interesting substitutions for variables -
 the answers we are looking for - is to use the special `$ans` predicate
@@ -1045,7 +1045,7 @@ is translated as
    `[["is_father","?:X"], "<=>", ["exists", ["Y"], ["father","?:X","Y"]]]`
     
 
-### Multiple values, @context and namespaces, @base, @type.
+### Multiple values, context and namespaces, base, type.
 
 Multiple values like given in `"son": ["mark","michael"]` in the
 following example are interpreted according to the JSON-LD RDF
@@ -1152,7 +1152,7 @@ Proof of the example:
     ]}
     ]}
 
-### Nested objects/maps
+### Nested objects aka maps
 
 JSON-LD interprets JSON objects/maps as key values as new things with their
 own id-s and properties.
@@ -1300,7 +1300,7 @@ an answer:
 
 
 
-## Graphs, named graphs and quads: the $narc predicate
+## Graphs, named graphs and quads with the narc predicate
 
 JSON-LD uses the `"@graph"` key for two objectives:
 
