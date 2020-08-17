@@ -418,7 +418,7 @@ is treated as a disjunction of elements `[L1,"|", ... ,"|",LN]` if
 
 
 
-### Equality in the core fragment
+### Equality predicate
 
 
 Predicates `"="` and `"!="` stand for equality and inequality and can occur
@@ -955,7 +955,7 @@ leads to a much faster proof search. The conversion to TPTP is thus:
     fof(frm_4,negated_conjecture,(! [X] : (grandfather(john,X) => $ans(X)))).
 
 
-### Convenience connectives
+### Convenience connectives and predicates
 
 The following "convenience" connectives and constants 
 `"-", "not", "and", "or", "if" ... "then" ..., null`
@@ -986,6 +986,10 @@ consequent of the implication.  Example:
 
   `[["a","&","b","&","c"], "=>", ["d","|","e"]]`  
 
+The equality predicate `"="` is also allowed in the prefix form, i.e. as a first
+element of a list. It may be prefixed with  `-` or  `~` to indicate inequality.
+
+### null
 
 The `null` symbol of JSON is treated analogously to the SQL `null` representing a missing
 or unknown value. The translation mechanism of eliminating a `null` inside some formula
@@ -1554,7 +1558,7 @@ defines a function and three predicates on distinct symbols:
 * `["$substrat", A, B, C]` evaluates to *true* if a distinct symbol A is a substring of a 
    distinct symbol B exactly at the integer position C (starting from 0), and *false* otherwise.
 
-* `["$is_distinct", A]` evaluates to *true* if A is a distinct symbol and *false* is A is a number or a list.
+* `["$is_distinct", A]` evaluates to *true* if A is a distinct symbol and *false* if A is a number or a list.
 
 
 The following is an example of using distinct symbols: we define a rule saying that whenever sets of type values
