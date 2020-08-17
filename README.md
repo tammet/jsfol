@@ -13,13 +13,13 @@ with contributions from schulz@eprover.org and geoff@cs.miami.edu
 * [Initial conversion and proof examples](#Initial-conversion-and-proof-examples)
 * [Two layers of JSON-LD-LOGIC](#Two-layers-of-JSON-LD-LOGIC)
 * [Core fragment](#Core-fragment)
-* [Primitives in the core fragment](#Primitives-in-the-core-fragment)
-* [Terms and atoms in the core fragment](#Terms-and-atoms-in-the-core-fragment)
-* [Formulas in the core fragment](#Formulas-in-the-core-fragment)
-* [Equality predicate](#Equality-predicate)
-* [Formula list](#Formula-list)
-* [Metainformation and roles in the core fragment](#Metainformation-and-roles-in-the-core-fragment)
-* [Included files](#Included-files)
+  * [Primitives in the core fragment](#Primitives-in-the-core-fragment)
+  * [Terms and atoms in the core fragment](#Terms-and-atoms-in-the-core-fragment)
+  * [Formulas in the core fragment](#Formulas-in-the-core-fragment)
+  * [Equality predicate](#Equality-predicate)
+  * [Formula list](#Formula-list)
+  * [Metainformation and roles in the core fragment](#Metainformation-and-roles-in-the-core-fragment)
+  * [Included files](#Included-files)
 * [Full JSON-LD-LOGIC](#Full-JSON-LD-LOGIC)
 * [JSON objects aka maps](#JSON-objects-aka-maps)
 * [Ordinary and distinct symbols](#Ordinary-and-distinct-symbols)
@@ -28,9 +28,9 @@ with contributions from schulz@eprover.org and geoff@cs.miami.edu
 * [Introducing logic to JSON-LD](#Introducing-logic-to-JSON-LD)
 * [ans and question](#ans-and-question)
 * [Convenience connectives and predicates](#Convenience-connectives-and-predicates)
-* [Multiple values, context and namespaces, base, type.](#Multiple-values,-context-and-namespaces,-base,-type)
+* [Multiple values and context and namespaces and the base type](#Multiple-values-and-context-and-namespaces-and-the-base-type)
 * [Nested objects aka maps](#Nested-objects-aka-maps)
-* [Graphs, named graphs and quads with the narc predicate](#Graphs,-named-graphs-and-quads-with-the-narc-predicate)
+* [Graphs and quads with the narc predicate](#Graphs-and-quads-with-the-narc-predicate)
 * [Numbers and arithmetic](#Numbers-and-arithmetic)
 * [Lists and list functions](#Lists-and-list-functions)
 * [Distinct symbols as strings](#Distinct-symbols-as-strings)
@@ -1045,7 +1045,7 @@ is translated as
    `[["is_father","?:X"], "<=>", ["exists", ["Y"], ["father","?:X","Y"]]]`
     
 
-### Multiple values, context and namespaces, base, type.
+### Multiple values and context and namespaces and the base type
 
 Multiple values like given in `"son": ["mark","michael"]` in the
 following example are interpreted according to the JSON-LD RDF
@@ -1300,7 +1300,7 @@ an answer:
 
 
 
-## Graphs, named graphs and quads with the narc predicate
+## Graphs and quads with the narc predicate
 
 JSON-LD uses the `"@graph"` key for two objectives:
 
