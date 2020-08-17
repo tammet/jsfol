@@ -9,6 +9,32 @@ tanel.tammet@gmail.com
 
 with contributions from schulz@eprover.org and geoff@cs.miami.edu
 
+* [Goals and summary](#Goals-and-summary)
+* [Initial conversion and proof examples](#Initial-conversion-and-proof-examples)
+* [Two layers of JSON-LD-LOGIC](#Two-layers-of-JSON-LD-LOGIC)
+* [Core fragment](#Core-fragment)
+* [Primitives in the core fragment](#Primitives-in-the-core-fragment)
+* [Terms and atoms in the core fragment](#Terms-and-atoms-in-the-core-fragment)
+* [Formulas in the core fragment](#Formulas-in-the-core-fragment)
+* [Equality predicate](#Equality-predicate)
+* [Formula list](#Formula-list)
+* [Metainformation and roles in the core fragment](#Metainformation-and-roles-in-the-core-fragment)
+* [Included files](#Included-files)
+* [Full JSON-LD-LOGIC](#Full-JSON-LD-LOGIC)
+* [JSON objects aka maps](#JSON-objects-aka-maps)
+* [Ordinary and distinct symbols](#Ordinary-and-distinct-symbols)
+* [Datatypes via @type and typed symbols](#Datatypes-via-@type-and-typed-symbols)
+* [Missing @id and blank nodes](#Missing-@id-and-blank-nodes)
+* [@logic: introducing logic to JSON-LD](#@logic:-introducing-logic-to-JSON-LD)
+* [$ans and "@question"](#$ans-and-"@question")
+* [Convenience connectives and predicates](#Convenience-connectives-and-predicates)
+* [Multiple values, @context and namespaces, @base, @type.](#Multiple-values,-@context-and-namespaces,-@base,-@type.)
+* [Nested objects/maps](#Nested-objects/maps)
+* [Graphs, named graphs and quads: the $narc predicate](Graphs,-named-graphs-and-quads:-the-$narc-predicate)
+* [Numbers and arithmetic](#Numbers-and-arithmetic)
+* [Lists and list functions](#Lists-and-list-functions)
+* [Distinct symbols as strings](#Distinct-symbols-as-strings)
+
 
 Goals and summary
 ------------------
