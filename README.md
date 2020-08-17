@@ -1284,7 +1284,7 @@ JSON-LD uses the `"@graph"` key for two objectives:
   arc belongs to. JSON-LD-LOGIC converts such lists using the four-argument `"$narc"`
   predicate (named arc).
    
-A grandfather example with two trivial graphs and a rule merging all the names graphs into one
+A grandfather example with two trivial named graphs and a rule merging the named graphs into one
 unnamed graph:   
 
     [
@@ -1349,7 +1349,7 @@ And we get the expected result
     [9, ["in", "frm_5"], [["-$arc","?:X","grandfather","john"], ["$ans","?:X"]]],
     [10, ["mp", 8, 9], [["$ans","mark"]]]
     ]}
-]}
+    ]}
 
 
 ## Numbers and arithmetic
@@ -1381,7 +1381,8 @@ This said, the numbers and arithmetic functions and predicates are defined as fo
   `23.45, 0.0, -4.0000000, 1.0E+2`  
 
 * The following TPTP prefix form arithmetic predicates and functions on
-  integers and reals are used with the same meaning as in TPTP:
+  integers and reals are used with the same meaning as defined 
+  in the [TPTP arithmetic system](http://www.tptp.org/TPTP/TR/TPTPTR.shtml#Arithmetic):
   
    * Type detection predicates `"$is_int"`, `"$is_real"`.
    
