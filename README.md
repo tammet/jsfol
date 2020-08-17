@@ -112,11 +112,11 @@ The main features of the syntax are:
 * JSON-LD semantics in RDF is represented by the`"$arc"` predicate for triplets
   like `["$arc","pete","father","john"]` and an
   `"$narc"` predicate for named triplets aka quads like `["$narc","pete","father","john","eveknows"]`.
-* JSON maps like  `{"father:"john", "@logic": ["p","?:X",1]}` are used for 
+* JSON objects aka maps like  `{"father:"john", "@logic": ["p","?:X",1]}` are also used for 
   inserting logic into JSON-LD expressions and adding metainformation to logic formulas.  
 * JSON strings can represent ordinary constant/function/predicate symbols like `"foo"`,
-  free variables like `"?:X"`, blank nodes like `"_:b0"` and distinct symbols like `"#:bar"`,
-  using special JSON-LD-style *prefixes*. 
+  bound variables likes `"X"`, free variables like `"?:X"`, blank nodes like `"_:b0"` 
+  and distinct symbols like `"#:bar"`, the latter three using special JSON-LD-style *prefixes*. 
 * Arithmetic, a list type, string operations on distinct symbols and the semantics for null are defined.  
 * JSON lists in JSON-LD like `{"@list":["a",4]}` are translated to nested typed terms
   using the `"$list"` and `"$nil"` functions: `["$list","a",["$list",4,"$nil"]]`.
@@ -168,7 +168,9 @@ The exclamation mark `!` denotes *universal quantifier* (for all)
 and the question mark `?` denotes *existential quantifier* (exists).
 Variables have to start with the uppercase letter, non-variable symbols
 with a lowercase letter, underscore `_` or dollar `$`. The logical
-operator `&` denotes *conjunction* (and), `=>` denotes *implication*, `~` denotes *negation*.
+operator `~` denotes *negation*,`&` denotes *conjunction* (and), `|` denotes *disjunction* , `=>` denotes *implication*, 
+`<=>` denotes *equivalence*. *Equality* is denoted by the infix `=` predicate along with the negation of equality `!=`.
+The TPTP use of quotes and double quotes surrounding some symbols will be described later.
 
 We obtain the following refutation proof in json:
 
@@ -198,8 +200,9 @@ The proofs in this document are json objects with two keys:
   Here we did not ask to find a concrete person, so we have only 
   a single answer containing just a `proof` key indicating a list with the
   numbered steps of the proof found:
-  each step has a form `[clause id, derivation rule and sources, clause]` where the clause
-  either stems from an input fact / rule or is derived from the sources.
+  each step has a form `[clause id, [derivation rule, source 1, ..., source N], clause]` where the clause
+  either stems from an input fact / rule or is derived from the indicated sources. A source may be represented
+  as a step number or a list with the step number as a first element and the rest indicating an exact position in the source clause.
 
 The formulas in the proof are always just lists of atoms (called *clauses*) treated
 as a disjunction (or). Negation is prefixed as a minus sign `-` to the predicate:
@@ -214,8 +217,9 @@ use *Skolemization* to create new function and constant symbols.
 from the earlier sources 1 and 2 present in the proof. More concretely, the first literals of both were cut off and
 the remaining parts were concatenated under the unifying substitution. 
 `["mp", 7, 4, 8]` means that the clause was first 
-derived from clauses 7 and 4 and then the clause 8 was used for and additional
-simplifying resolution step.
+derived from clauses 7 and 4 and then the clause 8 was used for an additional
+simplifying resolution or equality conversion step. There are also other derivation operators like equality replacement,
+simplification etc, denoted differently from `"mp"`.
 
 The second example above can be converted to TPTP as:
     
@@ -274,8 +278,8 @@ Two layers of JSON-LD-LOGIC
 
 `Core fragment` specifies minimal JSON syntax for writing logic formulas 
 which can be translated to the TPTP FOF and CNF sublanguages. All the TPTP FOF and CNF 
-formulas are directly convertible to the core JSON-LD-LOGIC. Both of these
-TPTP sublanguages cover standard first order logic with functions and 
+formulas are directly convertible to the core JSON-LD-LOGIC and vice versa. 
+Both of these TPTP sublanguages cover standard first order logic with functions and 
 the equality predicate.
 
 `Full language` adds compatibility with JSON-LD along with support for
@@ -283,7 +287,8 @@ an arithmetic-plus-distinct-symbols part of the TPTP typed sublanguage TFF plus
 an additional list type, several additional pre-defined functions, 
 convenience functions and operators. Full JSON-LD-LOGIC can be 
 converted to the core fragment, except for the typed part using arithmetic, lists
-and distinct symbols.
+and distinct symbols: in the core fragment the functions and predicates on
+typed values are left as is, i.e. not evaluated.
 
 We will first present the core fragment and thereafter the full language.
 
@@ -303,11 +308,11 @@ Core fragment constructions can be viewed as falling into one of five categories
 from bottom to top:
 
 * `Primitives` are constants, function/predicate symbols and variables 
-   represented by JSON primitives.
+   represented by JSON strings.
 * `Terms and atoms` are built of primitives and terms as nested JSON lists. 
    A `literal` is either an atom or a negated atom.
-* `Formulas` are built of literals using logical contructors like "&", "exists", etc
-   using nested JSON lists and JSON maps as used in JSON-LD.
+* `Formulas` are built of literals using logical constructors like "&", "exists", etc
+   using nested JSON lists. JSON objects aka maps are used for adding meta-information to formulas.
 * `Formula lists` are JSON lists of fully formed, independent standalone formulas.
 
 
@@ -367,7 +372,7 @@ from bottom to top:
   and should not be used in the core fragment.
 
 * Objects (aka maps) are a part of the full language and should be used
-  only in the restricted way at as top level formulas in the core fragment. 
+  only for providing meta-information for top level formulas in the core fragment. 
    
    
 ### Terms and atoms in the core fragment
@@ -564,7 +569,12 @@ The previous example is thus equivalent to:
 Notice that 
 
 * The existentially quantified `"Y"` variable in the last formula is dependent on
-  the leading `"X"` variable of the same formula.
+  the leading `"X"` variable of the same formula. The last formula can be converted
+  to a clause normal form with the help of *Skolemization* as
+
+  `cnf(frm_4,axiom,(~is_father(X0) | father(X0,$sk1(X0)))).`
+
+  `cnf(frm_4,axiom,(is_father(X0) | ~father(X0,X1))).`
 
 * The free variables `"?:X"` in the last two formulas of the example before conversion 
   are distinct from each other.
@@ -629,9 +639,9 @@ The following example
 
 also represents an unsatisfiable formula `p(a) & p(b) & ~p(a)`.
 
-As an exception the *free variables* are not implicitly bound by a "forall" quantifier
-in the formula with a *conjecture* role: instead, they are implicitly
-bound by the "exists" quantifier: this corresponds better to the intuitive 
+As an exception the *free variables* are not implicitly bound by a universal quantifier
+(*for all*) in the formula with a *conjecture* role: instead, they are implicitly
+bound by the existential quantifier (*exists*): this corresponds better to the intuitive 
 understanding of free variables in the conjecture, especially in the light
 of the `$ans`predicate and the `@question` key in the full language. For example,
 
@@ -661,17 +671,18 @@ which is equivalent to
 For other *role* values we cite "The Formulae Section" of 
 [TPTP technical manual](http://tptp.org/TPTP/TR/TPTPTR.shtml): 
 the role gives the user semantics of the formula, one of `axiom, hypothesis, definition,
-assumption, lemma, theorem, corollary, conjecture, negated_conjecture, plain, type`, and `unknown`. ..."
+assumption, lemma, theorem, corollary, conjecture, negated_conjecture, plain, type, and unknown.
 
-Treating of any other key values except these of the predefined keys is up to the application.
+Treating of any other key values except these of the predefined keys is up to the application and
+can be used for giving additional metainformation to formulas.
 
 
 Included files
 --------------
 
 A document may include other files/documents, treated by appending the included formula list and the formula
-list of the main document. A special atom with the form `["include", filename]` in the top formula list
-is interpreted as an include command:
+list of the main document. Following the TPTP convention, JSON-LD-LOGIC uses a special atom with the 
+form `["include", filename]` in the top formula list, interpreted as an *include command*:
 
     [
       ["include","foo.js"],
@@ -683,7 +694,7 @@ include files with relative path names are expected to be found either under the
 or if not found there then under the directory specified in the $TPTP environment variable.
 
 The languages supported by the include command are implementation specific: other languages than JSON-LD-LOGIC
-might be allowed to be imported.
+or TPTP might be allowed to be imported.
 
 
 
@@ -710,7 +721,8 @@ The main additional features of the full language above the core fragment are:
 ### JSON objects aka maps
 
 JSON objects are interpreted according to the RDF semantics of JSON-LD, 
-with a few modifications described later in this section.
+with modifications for the interpretation of JSON-LD lists and `null` as 
+described later in this section.
 
 The core principle is that each RDF triple `subject, property, value` is 
 converted to an atom `["$arc",subject,property,value]` indicating that
@@ -1045,8 +1057,11 @@ element of a list. It may be prefixed with  `-` or  `~` to indicate inequality.
 
 ### null
 
-The `null` symbol of JSON is treated analogously to the SQL `null` representing a missing
-or unknown value. The translation mechanism of eliminating a `null` inside some formula
+The `null` symbol of JSON is not given a semantics as a value in JSON-LD.
+
+JSON-LD-LOGIC deviates from this lack of interpretation by treating `null` 
+analogously to the SQL `null` representing a missing or unknown value. 
+The translation mechanism of eliminating a `null` inside some formula
 `F` is as follows:
 
 * Create a new variable `V` not occurring in `F`. I.e. `V` is a new string.
