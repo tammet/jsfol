@@ -31,7 +31,7 @@ Contents
   * [Introducing logic to JSON-LD](#Introducing-logic-to-JSON-LD)
     * [ans and question](#ans-and-question)
     * [Convenience connectives and predicates](#Convenience-connectives-and-predicates)
-    * [Multiple values and context and namespaces and the base type](#Multiple-values-and-context-and-namespaces-and-the-base-type)
+    * [Multiple values and the context and namespaces and the base type](#Multiple-values-and-the-context-and-namespaces-and-the-base-type)
     * [Nested objects aka maps](#Nested-objects-aka-maps)
   * [Graphs and quads with the narc predicate](#Graphs-and-quads-with-the-narc-predicate)
   * [Numbers and arithmetic](#Numbers-and-arithmetic)
@@ -383,11 +383,11 @@ lisp s-expressions: the first element of a list stands for a predicate or a func
 
 Example:
 
-    `["foo","bar","?:Y","a",["f",["f","b"]]]`
+    ["foo","bar","?:Y","a",["f",["f","b"]]]
 
 stands for a TPTP term or atom 
 
-    `foo(bar,Y,a,f(f(b)))` 
+    foo(bar,Y,a,f(f(b)))
 
 where `Y` is a free variable.
 
@@ -673,8 +673,11 @@ For other *role* values we cite "The Formulae Section" of
 the role gives the user semantics of the formula, one of `axiom, hypothesis, definition,
 assumption, lemma, theorem, corollary, conjecture, negated_conjecture, plain, type, and unknown.
 
-Treating of any other key values except these of the predefined keys is up to the application and
-can be used for giving additional metainformation to formulas.
+Other key values except these of the predefined keys above will have a JSON-LD-defined
+meaning in the full language, but not in the core fragment. 
+Additional metainformation may be attached to formulas using keys
+with `@` prefix and not defined by JSON-LD, like `"@comment"`: such keys are ignored by the 
+full language, but may be given a specific meaning by applications.
 
 
 Included files
@@ -804,11 +807,27 @@ stems from the following observations:
 
 ### Datatypes and typed symbols
 
-JSON-LD-LOGIC does not currently specify the treatment of `@type` as a datatype
-(say, XML Schema type as used in RDF). The special types of strings like
-dates etc could be treated, for example, by prepending `^^typename` to a 
-typed string and considering such typed strings to be unequal to syntactically
-different typed symbols.
+JSON-LD-LOGIC does not currently specify the interpretation of `@type` used as a datatype
+in a JSON-LD context like 
+
+    "@context":{
+      "foo":{
+        "@id":"http://bar.org",
+        "@type":"http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    }
+
+The special types of strings like
+dates etc could be interpreted, for example, by prepending `^^typename` to a 
+typed string like 
+
+    "2011-04-09T20:00:00Z^^http://www.w3.org/2001/XMLSchema#dateTime"
+
+and considering such typed strings to be unequal to syntactically
+different typed symbols. Alternatively, such types could be encoded using
+a special datatype-assigning function symbol like
+
+    ["$datatype", "2011-04-09T20:00:00Z", "http://www.w3.org/2001/XMLSchema#dateTime"]
 
 The suitable way of converting typed strings to TPTP may be determined in the
 later revisions.
@@ -817,11 +836,14 @@ JSON-LD-LOGIC does, however, treat numeric JSON values as well as lists
 indicated by the `"@list"` key (described later) and distinct symbols analogous
 to strings as built-in types.
 
+The special URI type in JSON-LD written as `"@type": "@id"` is ignored by
+JSON-LD-LOGIC, since it interprets JSON strings as ordinary logical symbols by default.
 
 ### Missing id and blank nodes
 
-In case a JSON object does not contain an `"@id"` key, a new symbol will 
-be automatically generated for the *object*.
+In case a JSON object does not contain an `"@id"` key, a new *blank node* symbol 
+not occurring anywhere else in the document must be automatically generated 
+for the *object*.
 
 The following example 
     
@@ -837,9 +859,8 @@ can be converted to TPTP as
 
 where `_:crtd_1` and `_:crtd_2` are new symbols not occurring anywhere else,
 corresponding to the *blank nodes* of JSON-LD and RDF. The blank nodes
-behave similarly to the existentially quantified variables, converted to
-the *skolem functions* by the clausification algorithms used by resolution
-theorem provers.
+behave similarly to the outermost existentially quantified variables, converted to
+the *skolem constants* by the clausification algorithms.
 
 The following JSON-LD example containing *blank nodes* 
     
@@ -1088,27 +1109,77 @@ is translated as
    `[["is_father","?:X"], "<=>", ["exists", ["Y"], ["father","?:X","Y"]]]`
     
 
-### Multiple values and context and namespaces and the base type
+### Multiple values and the context and namespaces and the base type
 
 Multiple values like given in `"son": ["mark","michael"]` in the
 following example are interpreted according to the JSON-LD RDF
-interpretation as leading to multiple triplets.
+interpretation as leading to multiple triplets. The following example
+
+    [
+      {"a":["b","c"]}     
+    ]
+
+is converted as
+
+    fof(frm_1,axiom,(
+      $arc('_:crtd_1',a,c) &
+      $arc('_:crtd_1',a,b))).
 
 An important feature of JSON-LD is the use of the `"@context"` key to specify,
 for example, namespaces, symbol mapping and types.
 
 JSON-LD-LOGIC expands strings in the object/map by the JSON-LD `"@context"` 
-expansion rules.
+expansion rules. The following example
 
+    [
+      {
+        "@context": {
+          "@vocab": "http://foo.org/",
+          "b": "c",
+          "g": {"@id": "h"}
+        },
+        "a": "b",
+        "b": "c",
+        "c": "d",
+        "http://e.bar": "f",
+        "g":"h"
+      }  
+    ]
+
+can be converted to
+
+    fof(frm_1,axiom,(
+      $arc('_:crtd_1','http://foo.org/h',h) &
+     ($arc('_:crtd_1','http://e.bar',f) &
+     ($arc('_:crtd_1','http://foo.org/c',d) &
+     ($arc('_:crtd_1','http://foo.org/c',c) &
+      $arc('_:crtd_1','http://foo.org/a',b)))))).
+  
 Notice that the example uses inline `"@context"` value, not one read
 from an URL: reading the `"@context"` value from the
 URL would make the interpretation of the formula indeterminate.
 
+The following example of using `"@base"` key inside a context
+
+    [
+      {
+        "@context": {
+          "@base": "http://foo.org/"       
+        },
+        "@id": "a",
+        "b": "c"        
+      }  
+    ]
+
+can be converted to
+
+    fof(frm_1,axiom,$arc('http://foo.org/a',b,c)).
+
 The question as for what is the default base URI for `"@id"` key values
 is left open in JSON-LD-LOGIC. In the following we assume it is an empty
-string.
+string. 
 
-The `"@type"` key is converted to the RDF value string
+The `"@type"` key outside a `"@context"` value is converted to the RDF-specified string
 `"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"`.
 
 Consider the following example using multiple values and the JSON-LD `"@context"` 
@@ -1200,9 +1271,103 @@ Proof of the example:
 JSON-LD interprets JSON objects/maps as key values as new things with their
 own id-s and properties.
 
-JSON-LD-LOGIC interprets such values correspondingly.
+JSON-LD-LOGIC interprets and converts such values correspondingly.
 
-Here is a bit more complex example with a nested `"child"` value indicating that
+Nesting can be arbitrarily deep and nested objects/maps may contain the `@logic` 
+key at any level
+
+A simple example:
+
+    [
+      {"a":"b"},
+      {"c":  
+         {
+          "d":"e",
+          "f":"g"
+         } 
+      }   
+    ]
+
+is converted to
+
+    fof(frm_1,axiom,$arc('_:crtd_1',a,b)).
+    fof(frm_2,axiom,(
+      ($arc('_:crtd_3',f,g) & 
+       $arc('_:crtd_3',d,e)) & 
+       $arc('_:crtd_2',c,'_:crtd_3'))).
+
+
+Logic formulas may also contain nested objects. The following example indicates
+that pete has a daughter and a son with the same unknown age:
+
+    [
+      ["exists",["X"],
+        {"@id":"pete", 
+         "son": {"age":"X"},
+         "daughter": {"age":"X"} 
+        }
+      ]  
+    ]
+
+The example can be converted to
+
+    fof(frm_1,axiom,
+      (? [X] : 
+        ($arc('_:crtd_2',age,X) & 
+        ($arc(pete,daughter,'_:crtd_2') & 
+        ($arc('_:crtd_1',age,X) & 
+        $arc(pete,son,'_:crtd_1')))))).
+
+Notice that in the last example we could have used a *blank node* instead of an
+existentially quantified `X`: the clausified form of the example turns `X` into
+a *Skolem constant*.
+
+Next, let us define a type `fatheroftwins` illustrating the nesting of several
+layers of lists and objects/maps. In particular, one of the internal objects/maps
+also contains a `@logic` key:
+
+    [
+      [
+        {"@id":"?:X","@type":"fatheroftwins"},
+        "<=>",
+        ["exists",
+          ["C1","C2","A","M"],
+          { 
+            "@id":"?:X",
+            "child": [
+              {"@id":"C1","age":"A","father":"?:X","mother":"M"},
+              {"@id":"C2","age":"A","father":"?:X","mother":"M"}
+            ],
+            "@logic":  ["C1","!=","C2"]                                  
+          }
+        ]    
+      ]
+    ] 
+
+The example above can be converted as
+    
+    fof(frm_1,axiom,
+      (! [X] : 
+        ($arc(X,'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',fatheroftwins) 
+        <=> 
+        (? [C1,C2,A,M] : 
+          (~(C1 = C2) & 
+          ((! [X] : 
+            ($arc(C2,mother,M) & 
+            ($arc(C2,father,X) & 
+             $arc(C2,age,A)))) & 
+          ($arc(X,child,C2) & 
+          ((! [X] : 
+            ($arc(C1,mother,M) & 
+            ($arc(C1,father,X) &
+             $arc(C1,age,A)))) & 
+          $arc(X,child,C1))))))))).
+
+Since the values of variables in this example depend on the values of other variables,
+we cannot express the same logic by using the blank nodes instead of bound variables:
+the clausified version of the formula contains *Skolem functions* with variables as arguments.
+
+Next we will present a more complex example with a nested `"child"` value indicating that
 the person we describe (with no id given) has two children with ages
 10 and 2, but nothing more is known about them. We also know the person
 has a father `john`. The rules state the son/daughter and mother/father
@@ -1347,15 +1512,15 @@ an answer:
 
 JSON-LD uses the `"@graph"` key for two objectives:
 
-* If an object does not have an id but contains `"@graph"`, the value of the latter is 
+* If an object does not contain an `@id` key but contains `"@graph"`, the value of the latter is 
   simply a list of objects in the scope of the `"@context"` of the object.
   JSON-LD-LOGIC converts such lists to conjunctions, each element using
   the same expansion rules.
 
-* If an object has an id, the conjunction elements are not interpreted as RDF triplets, 
-  but *quads* with the object id as a fourth element: the id indicates which graph the
+* If an object does contain an `@id` key, the conjunction elements are not interpreted as RDF triplets, 
+  but *quads* with the `@id` key value as a fourth element: the `@id` value indicates which graph the
   arc belongs to. JSON-LD-LOGIC converts such lists using the four-argument `"$narc"`
-  predicate (named arc) with the graph id as the last argument.
+  predicate (named arc) with the graph `@id` value as the last argument.
    
 A grandfather example with two trivial named graphs and a rule merging the named graphs into one
 unnamed graph:   
@@ -1427,15 +1592,15 @@ And we get the expected result
 
 ## Numbers and arithmetic
 
-Although JSON-LD-LOGIC defines several functions and predicates on logic, it
+Although JSON-LD-LOGIC defines several functions and predicates on numbers, it
 does not axiomatize the properties of these functions except direct evaluation
 on numbers. Citing TPTP:
 
 The extent to which ATP systems are able to work with the arithmetic predicates and
 functions can vary, from a simple ability to evaluate ground terms, e.g., 
-$sum(2,3) can be evaluated to 5, through an ability to instantiate variables 
-in equations involving such functions, e.g., $product(2,$uminus(X)) = $uminus($sum(X,2)) 
-can instantiate X to 2, to extensive algebraic manipulation capability. 
+`$sum(2,3)` can be evaluated to 5, through an ability to instantiate variables 
+in equations involving such functions, e.g., `$product(2,$uminus(X)) = $uminus($sum(X,2))` 
+can instantiate `X` to 2, to extensive algebraic manipulation capability. 
 The syntax does not axiomatize arithmetic theory, but may be used to write axioms of the theory. 
 
 The same general principle holds for lists and distinct symbols interpreted as strings.
@@ -1469,10 +1634,7 @@ This said, the numbers and arithmetic functions and predicates are defined as fo
       "$quotient", "$quotient_e",
       "$remainder_e", "$remainder_t", "$remainder_f", 
       "$floor", "$ceiling",
-      "$uminus", "$truncate", "$round"`
-
-    * An additional convenience predicate `"$is_number"` not present in TPTP,
-      evaluated as a disjunction of `"$is_int"`, `"$is_real"`.
+      "$uminus", "$truncate", "$round"`    
 
     Note: these comparison predicates and arithmetic functions take exactly two arguments and
     can thus occur only in the lists with the length three.  
@@ -1500,9 +1662,9 @@ does neither require nor prohibit such evaluations.
 
 ## Lists and list functions
 
-The RDF semantics of the JSON-LD list value construction like `"clients": {"@list":["a","b","c"]}`
-requires the construction of a number of triplets with `rdf:first`, `rdf:rest` and `rdf:nil`
-properties.
+The RDF semantics of the JSON-LD list value construction using the `"@list"`key 
+like in `"clients": {"@list":["a","b","c"]}` requires the construction of a number of
+triplets with `rdf:first`, `rdf:rest` and `rdf:nil` properties.
 
 JSON-LD-LOGIC deviates from this semantics since it can use function terms instead of
 triplets.
@@ -1510,11 +1672,22 @@ triplets.
 A list is converted using the special `$list` function appending a first argument to
 the second argument and the `$nil` constant for an empty list.
 
+Example:
+
+    [{"foo": {"@list":["a",["b","c"],[],"d"]}}]
+
+is converted to
+
+    fof(frm_1,axiom,$arc('_:crtd_1',foo,
+      $list(a,$list($list(b,$list(c,$nil)),$list($nil,$list(d,$nil)))))).
+
+A JSON-LD list value using the `"@list"`key must not contain a JSON object/map like `{"a":1}`.
+
 Terms constructed using `$list` or `$nil` are interpreted as having a *list type*: 
 
-* A list is inequal to any number or a distinct symbol.
+* A *list type object* is inequal to any number or a distinct symbol.
 
-* Syntactically different lists A and B are unequal if at any position the corresponding
+* Syntactically different *list type objects* A and B are unequal if at any position the corresponding
   elements of A and B are unequal typed values: numbers, lists or distinct symbols.
 
 For example, the atom `[["$list","a","$nil"],"=",["$list","b","$nil"]]` does not evaluate to *false* while
@@ -1534,7 +1707,7 @@ These functions can be applied to non-list arguments, where they are left as is 
 evaluated.
 
 Observe that since JSON-LD-LOGIC does not contain a theory of arithmetic, lists or strings,
-the example formula ["exists",["X"],["$is_list","X"]] is not guaranteed to be provable:
+the example formula `["exists",["X"],["$is_list","X"]]` is not guaranteed to be provable:
 an implementation may prove it or not, depending on the particular theory and a proof search method
 implemented. 
 
@@ -1637,7 +1810,7 @@ Result:
 ## Distinct symbols as strings 
 
 
-Since distinct symbols (strings prefixed by `#:`) can be viewed as strings, JSON-LD-LOGIC 
+Since distinct symbols (strings prefixed by `#:`) can be viewed as *string type objects*, JSON-LD-LOGIC 
 defines a function and three predicates on distinct symbols:
 
 * `["$strlen",S]` returns the integer length of a distinct symbol S as a string.
@@ -1651,7 +1824,9 @@ defines a function and three predicates on distinct symbols:
 
 * `["$is_distinct", A]` evaluates to *true* if A is a distinct symbol and *false* if A is a number or a list.
 
-The prefix `"#:"` part of a distinct symbol is not considered to be a part of the symbol as a string: for example,
+The prefix `"#:"` part of a distinct symbol is not considered to be a part of the symbol interpreted
+as a string: for example,
+
 `["$strlen","#:ab"]` should evaluate to 2.
 
 The first three functions can be applied to non-distinct arguments, where they are left as is and not 
@@ -1659,7 +1834,7 @@ evaluated. The last predicate can be similarly applied to any arguments. For exa
 is not evaluated, while `["$is_distinct", 1]` is evaluated to *false* and `["$is_distinct", "#:d"]` is evaluated to *true*.
 
 Observe that since JSON-LD-LOGIC does not contain a theory of arithmetic, lists or strings,
-the example formula ["exists",["X"],["$is_distinct","X"]] is not guaranteed to be provable:
+the example formula `["exists",["X"],["$is_distinct","X"]]` is not guaranteed to be provable:
 an implementation may prove it or not, depending on the particular theory and a proof search method
 implemented. 
 
